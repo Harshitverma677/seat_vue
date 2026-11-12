@@ -36,3 +36,4 @@ void main() {
     expect(find.text('2D Seat Map'), findsOneWidget);
   });
 }
+
