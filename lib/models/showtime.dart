@@ -18,3 +18,4 @@ class Showtime {
     required this.basePrice,
   });
 }
+

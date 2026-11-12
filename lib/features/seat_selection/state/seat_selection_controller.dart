@@ -72,3 +72,4 @@ class SeatSelectionController extends ChangeNotifier {
     notifyListeners();
   }
 }
+

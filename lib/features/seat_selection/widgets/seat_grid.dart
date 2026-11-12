@@ -175,3 +175,4 @@ class SeatGrid extends StatelessWidget {
     );
   }
 }
+

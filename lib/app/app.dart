@@ -17,3 +17,4 @@ class SeatVueApp extends StatelessWidget {
     );
   }
 }
+

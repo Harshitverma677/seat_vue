@@ -185,3 +185,4 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     );
   }
 }
+

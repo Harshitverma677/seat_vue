@@ -36,6 +36,10 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
   late AnimationController _cameraAnimController;
   Animation<double>? _cameraCurve;
 
+  late AnimationController _recenterAnimController;
+  double _recenterStartYaw = 0.0;
+  double _recenterStartPitch = 0.0;
+
   AuditoriumCameraState? _transitionStartState;
   SeatCameraPose? _transitionTargetPose;
 
@@ -57,10 +61,15 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
       vsync: this,
       duration: AppDurations.cameraTransition,
     );
-
     _cameraAnimController.addListener(_onCameraAnimationTick);
 
-    // Trigger initial entry animation: Overview -> Selected Seat
+    _recenterAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _recenterAnimController.addListener(_onRecenterTick);
+
+    // Initial camera dive: Overview -> Selected Seat eye pose
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animateToPose(targetPose, duration: AppDurations.cameraTransition);
     });
@@ -70,6 +79,8 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
   void dispose() {
     _cameraAnimController.removeListener(_onCameraAnimationTick);
     _cameraAnimController.dispose();
+    _recenterAnimController.removeListener(_onRecenterTick);
+    _recenterAnimController.dispose();
     _auditoriumService.dispose();
     super.dispose();
   }
@@ -85,6 +96,26 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
     );
 
     _auditoriumService.setInterpolatedState(interpolated);
+  }
+
+  void _onRecenterTick() {
+    final t = Curves.easeOutCubic.transform(_recenterAnimController.value);
+    final curYaw = _recenterStartYaw * (1.0 - t);
+    final curPitch = _recenterStartPitch * (1.0 - t);
+
+    _auditoriumService.setInterpolatedState(
+      _auditoriumService.currentState.copyWith(
+        yawOffset: curYaw,
+        pitchOffset: curPitch,
+      ),
+    );
+  }
+
+  void _triggerSmoothRecenter() {
+    if (_recenterAnimController.isAnimating || _auditoriumService.isAnimating) return;
+    _recenterStartYaw = _auditoriumService.currentState.yawOffset;
+    _recenterStartPitch = _auditoriumService.currentState.pitchOffset;
+    _recenterAnimController.forward(from: 0.0);
   }
 
   void _animateToPose(SeatCameraPose targetPose, {Duration? duration, VoidCallback? onComplete}) {
@@ -125,7 +156,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
     if (_isReturning) return;
     _isReturning = true;
 
-    // Animate camera back up to overview pose, then pop
+    // Smoothly animate back to overview pose, then pop
     _animateToPose(
       MockAuditoriums.overviewPose,
       duration: AppDurations.cameraReturn,
@@ -138,14 +169,14 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
   }
 
   String _getViewQualityDescription(Seat seat) {
-    if (seat.type == SeatType.vip) return 'VIP Luxury Recliner • Expansive Panoramic View';
+    if (seat.type == SeatType.vip) return 'VIP Luxury Recliner · Panoramic High View';
     if (seat.rowLabel == 'C' || seat.rowLabel == 'D') {
-      return 'IMAX Reference Sweet Spot • Eye-Level Screen Alignment';
+      return 'IMAX Reference Sweet Spot · Eye-Level Alignment';
     }
     if (seat.rowLabel == 'A' || seat.rowLabel == 'B') {
-      return 'Front Row Immersion • Massive Towering Screen View';
+      return 'Front Row Immersion · Towering Screen View';
     }
-    return 'Balanced Standard Seating • Great Stereo Acoustic Focus';
+    return 'Balanced Cinema Seating · Great Acoustic Focus';
   }
 
   @override
@@ -165,13 +196,13 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                     ? widget.seatController.selectedSeats.last
                     : widget.seatController.seats.first);
 
-            final isLookAroundActive = _auditoriumService.currentState.yawOffset.abs() > 0.02 ||
-                _auditoriumService.currentState.pitchOffset.abs() > 0.02;
+            final isLookAroundActive = _auditoriumService.currentState.yawOffset.abs() > 0.015 ||
+                _auditoriumService.currentState.pitchOffset.abs() > 0.015;
 
             return Stack(
               fit: StackFit.expand,
               children: [
-                // Interactive 3D Canvas with Pan Gestures for Look-Around
+                // 1. Interactive 3D Canvas with Pan Gestures for Look-Around
                 GestureDetector(
                   onPanUpdate: (details) {
                     _auditoriumService.applyLookAround(details.delta.dx, details.delta.dy);
@@ -185,7 +216,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                   ),
                 ),
 
-                // Top Floating Bar (Back button, Movie Title, Hall info)
+                // 2. Top Floating Navigation Bar (Reference A)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -202,7 +233,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.85),
+                          Colors.black.withValues(alpha: 0.9),
                           Colors.transparent,
                         ],
                       ),
@@ -210,7 +241,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Colors.black.withValues(alpha: 0.6),
+                          backgroundColor: Colors.black.withValues(alpha: 0.65),
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 20),
                             onPressed: _handleBack,
@@ -234,40 +265,48 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                 '${widget.movie.title} • ${widget.showtime.experienceType}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppTypography.titleMedium.copyWith(color: Colors.white),
+                                style: AppTypography.titleMedium.copyWith(color: Colors.white, fontSize: 15),
                               ),
                             ],
                           ),
                         ),
-                        if (isLookAroundActive)
-                          TextButton.icon(
-                            onPressed: () => _auditoriumService.resetLookAround(),
-                            icon: const Icon(Icons.center_focus_strong_rounded, size: 16, color: AppColors.primary),
-                            label: const Text(
-                              'Recenter',
-                              style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w700),
-                            ),
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.black.withValues(alpha: 0.6),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              shape: RoundedRectangleBorder(borderRadius: AppSpacing.roundedSm),
+                        // Recenter Control
+                        TextButton.icon(
+                          onPressed: isLookAroundActive ? _triggerSmoothRecenter : null,
+                          icon: Icon(
+                            Icons.center_focus_strong_rounded,
+                            size: 16,
+                            color: isLookAroundActive ? AppColors.primary : AppColors.textMuted,
+                          ),
+                          label: Text(
+                            'Recenter',
+                            style: TextStyle(
+                              color: isLookAroundActive ? AppColors.primary : AppColors.textMuted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(alpha: 0.6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            shape: const RoundedRectangleBorder(borderRadius: AppSpacing.roundedSm),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
 
-                // Gesture Hint overlay (visible briefly)
+                // 3. Compact Gesture Hint Overlay (Reference A)
                 Positioned(
-                  top: 110,
-                  left: 0,
-                  right: 0,
+                  top: 106,
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
+                        color: Colors.black.withValues(alpha: 0.65),
                         borderRadius: AppSpacing.roundedFull,
                         border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                       ),
@@ -276,9 +315,13 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                         children: [
                           const Icon(Icons.touch_app_rounded, size: 14, color: AppColors.primary),
                           const SizedBox(width: 6),
-                          Text(
-                            'Drag to look around auditorium • Tap seat below to switch',
-                            style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                          Flexible(
+                            child: Text(
+                              'Drag to look around · Tap a seat below to switch',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.labelSmall.copyWith(color: AppColors.textSecondary),
+                            ),
                           ),
                         ],
                       ),
@@ -286,23 +329,23 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                   ),
                 ),
 
-                // Bottom Panel: Seat Card, Row Switcher, and Selection Toggle
+                // 4. Bottom Information Sheet (Reference A & B)
                 Positioned(
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.95),
+                      color: AppColors.surface.withValues(alpha: 0.96),
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
                       border: const Border(
                         top: BorderSide(color: AppColors.surfaceBorder, width: 1),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.8),
-                          blurRadius: 24,
+                          color: Colors.black.withValues(alpha: 0.85),
+                          blurRadius: 28,
                           offset: const Offset(0, -6),
                         ),
                       ],
@@ -312,7 +355,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Handle pill
+                          // Sheet handle pill
                           Container(
                             width: 36,
                             height: 4,
@@ -335,7 +378,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                   boxShadow: [
                                     BoxShadow(
                                       color: AppColors.primary.withValues(alpha: 0.4),
-                                      blurRadius: 10,
+                                      blurRadius: 12,
                                     ),
                                   ],
                                 ),
@@ -356,31 +399,35 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                     Row(
                                       children: [
                                         Text(
-                                          'Row ${activeSeat.rowLabel} • Seat ${activeSeat.seatNumber}',
-                                          style: AppTypography.titleMedium,
+                                          'Row ${activeSeat.rowLabel} · Seat ${activeSeat.seatNumber}',
+                                          style: AppTypography.titleMedium.copyWith(fontSize: 15),
                                         ),
                                         const SizedBox(width: AppSpacing.xs),
-                                        if (activeSeat.type == SeatType.vip)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.seatVip,
-                                              borderRadius: AppSpacing.roundedXs,
-                                            ),
-                                            child: Text(
-                                              'VIP',
-                                              style: AppTypography.labelSmall.copyWith(
-                                                color: Colors.white,
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w800,
-                                              ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                          decoration: BoxDecoration(
+                                            color: activeSeat.type == SeatType.vip ? AppColors.seatVip : AppColors.surfaceElevated,
+                                            borderRadius: AppSpacing.roundedXs,
+                                            border: Border.all(
+                                              color: activeSeat.type == SeatType.vip ? AppColors.seatVipBorder : AppColors.surfaceBorder,
                                             ),
                                           ),
+                                          child: Text(
+                                            activeSeat.type == SeatType.vip ? 'VIP' : 'Standard',
+                                            style: AppTypography.labelSmall.copyWith(
+                                              color: Colors.white,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       _getViewQualityDescription(activeSeat),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: AppTypography.labelSmall.copyWith(
                                         color: AppColors.textSecondary,
                                         fontSize: 11,
@@ -389,6 +436,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: AppSpacing.sm),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 mainAxisSize: MainAxisSize.min,
@@ -401,7 +449,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                     ),
                                   ),
                                   Text(
-                                    '${(activeSeat.worldPosition.z).toStringAsFixed(1)}m from screen',
+                                    '${(activeSeat.worldPosition.z).toStringAsFixed(1)}m to screen',
                                     style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
                                   ),
                                 ],
@@ -435,14 +483,14 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                           ? AppColors.primary
                                           : isUnavailable
                                               ? AppColors.seatUnavailable
-                                              : AppColors.surfaceElevated,
+                                              : const Color(0xFF8B151F), // Red velvet tone
                                       borderRadius: AppSpacing.roundedMd,
                                       border: Border.all(
                                         color: isCurActive
                                             ? AppColors.primary
                                             : isUnavailable
                                                 ? AppColors.seatUnavailableBorder
-                                                : AppColors.surfaceBorder,
+                                                : const Color(0xFFA8222D),
                                       ),
                                     ),
                                     child: Center(
@@ -453,7 +501,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                               ? AppColors.textInverse
                                               : isUnavailable
                                                   ? AppColors.textMuted
-                                                  : AppColors.textPrimary,
+                                                  : Colors.white,
                                           fontWeight: isCurActive ? FontWeight.w800 : FontWeight.w600,
                                         ),
                                       ),
@@ -464,7 +512,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                             ),
                           ),
 
-                          const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.sm),
 
                           // Quick Row Switcher Tabs (A to H)
                           SizedBox(
@@ -479,7 +527,6 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
 
                                 return GestureDetector(
                                   onTap: () {
-                                    // Jump to same seat number in new row
                                     final newSeatId = '$row${activeSeat.seatNumber}';
                                     _onSelectSeatInPreview(newSeatId);
                                   },
@@ -522,7 +569,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                     side: const BorderSide(color: AppColors.surfaceBorder),
-                                    shape: RoundedRectangleBorder(borderRadius: AppSpacing.roundedLg),
+                                    shape: const RoundedRectangleBorder(borderRadius: AppSpacing.roundedLg),
                                   ),
                                 ),
                               ),
@@ -530,7 +577,7 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                               Expanded(
                                 child: PrimaryButton(
                                   label: widget.seatController.isSelected(activeSeat.id)
-                                      ? 'Selected (Keep)'
+                                      ? 'Keep Selection'
                                       : 'Select Seat',
                                   icon: widget.seatController.isSelected(activeSeat.id)
                                       ? Icons.check_circle_rounded

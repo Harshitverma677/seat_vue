@@ -10,3 +10,4 @@ class AppDurations {
   static const Duration cameraSwitchSeat = Duration(milliseconds: 650);
   static const Duration cameraReturn = Duration(milliseconds: 600);
 }
+

@@ -47,3 +47,4 @@ class AppColors {
   // Badges & Ratings
   static const Color ratingStar = Color(0xFFFFC107);
 }
+

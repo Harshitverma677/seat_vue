@@ -77,3 +77,4 @@ class SeatLegend extends StatelessWidget {
     );
   }
 }
+

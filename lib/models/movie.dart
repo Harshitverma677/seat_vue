@@ -32,3 +32,4 @@ class Movie {
     this.isNowShowing = true,
   });
 }
+

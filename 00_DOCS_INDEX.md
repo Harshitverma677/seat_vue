@@ -23,6 +23,10 @@ This file is the entry point for developers and coding agents. Before implementi
 | 8 | Polish and test the prototype | `10_STEP_08_POLISH_AND_TESTING.md`, then all relevant step documents |
 | Any step | Give an AI coding agent project-wide instructions | `AGENT_INSTRUCTIONS.md` |
 
+## New 3D visual adjustment
+
+Before changing the 3D preview to match the user's screenshots, read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. It takes priority over earlier generic 3D-view wording where they conflict. For 3D work, read it together with `08_STEP_06_3D_AUDITORIUM.md` and `09_STEP_07_CAMERA_AND_TRANSITIONS.md`.
+
 ## Required order
 
 Do not start the 3D transition before:

@@ -86,3 +86,4 @@ class AuditoriumCameraState {
     return Position3D(effX, effY, effZ);
   }
 }
+

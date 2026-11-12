@@ -28,3 +28,4 @@ class LoadingPlaceholder extends StatelessWidget {
     );
   }
 }
+

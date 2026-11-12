@@ -40,7 +40,7 @@ The 3D preview must correspond to the selected seat's actual modeled position an
 
 ## Documentation map
 
-Start with [`00_DOCS_INDEX.md`](00_DOCS_INDEX.md). It tells you which documents to read at each development step.
+Start with [`00_DOCS_INDEX.md`](00_DOCS_INDEX.md). It tells you which documents to read at each development step. For the realistic first-person cinema view, also read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`.
 
 ## Development rules
 

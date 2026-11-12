@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seat_vue/data/mock_auditoriums.dart';
 import 'package:seat_vue/features/seat_preview/models/auditorium_camera_state.dart';
-import 'package:seat_vue/models/seat.dart';
 
 void main() {
   group('Auditorium 3D Camera Pose Tests', () {
@@ -77,3 +76,4 @@ void main() {
     });
   });
 }
+

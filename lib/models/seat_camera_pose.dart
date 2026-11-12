@@ -25,3 +25,4 @@ class SeatCameraPose {
   String toString() =>
       'SeatCameraPose(seatId: $seatId, eye: $cameraPosition, target: $lookAtTarget, fov: $fov)';
 }
+
