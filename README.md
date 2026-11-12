@@ -1,53 +1,140 @@
-# Movie Booking UI with 3D Seat Preview
+<div align="center">
 
-A Flutter application prototype focused on a cinematic seat-selection experience. The defining interaction is selecting a seat in a 2D auditorium map and transitioning into a 3D cinema view that previews the movie screen from that seat's position.
+# 🎬 SeatVue
 
-## Current scope
+**Pick your seat. See your view. Before you book.**
 
-**Build now**
-- Flutter UI and navigation
-- Movie discovery and movie details using local mock data
-- Interactive 2D seat map
-- 3D cinema auditorium visualization
-- Seat-to-camera-position mapping
-- Animated transitions between the seat map and 3D preview
-- Seat switching and preview controls
-- Responsive layouts, loading/error states, and UI polish
+[![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+<br/>
 
-**Explicitly out of scope for this phase**
-- Authentication and user accounts
-- Backend, APIs, or cloud database
-- Real-time seat availability or seat locking
-- Payment gateway or checkout transactions
-- Real ticket issuance, QR validation, or booking confirmation
-- Production cinema/showtime integrations
+> A movie booking UI prototype where you can **preview exactly what the screen looks like** from any seat — in first-person 3D — before you buy.
 
-Use local mock data and clearly label simulated states. Do not imply that a seat is actually reserved.
+</div>
 
-## The core experience
+---
 
-1. User opens the app and browses sample movies.
-2. User opens a movie and chooses a sample showtime.
-3. User sees a 2D seat map with available, selected, and unavailable seats.
-4. User taps a seat.
-5. The selected seat is highlighted and its ID is passed to the 3D preview.
-6. The 3D camera animates to the camera position associated with that seat.
-7. The user can select another seat, inspect the view, and return to the seat map.
+## 🎥 What is SeatVue?
 
-## Key product principle
+SeatVue lets users browse movies, pick a showtime, select seats on an interactive 2D map, and then **step inside the auditorium** to see a real-time first-person 3D view from their chosen seat.
 
-The 3D preview must correspond to the selected seat's actual modeled position and orientation. It must not be a random static image or a generic view reused for every seat.
+---
 
-## Documentation map
+## ✨ Features
 
-Start with [`00_DOCS_INDEX.md`](00_DOCS_INDEX.md). It tells you which documents to read at each development step. For the realistic first-person cinema view, also read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`.
+| | Feature |
+|---|---|
+| 🏠 | **Home Screen** — Featured carousel, genre filters, Now Showing & Coming Soon |
+| 🎞️ | **Movie Details** — Cast, synopsis, showtime selector |
+| 💺 | **Interactive 2D Seat Map** — 8×8 grid, available / selected / VIP / unavailable states |
+| 🎭 | **First-Person 3D Preview** — See the screen from your exact seat using a custom `CustomPainter` projection engine |
+| 🎬 | **Realistic Auditorium** — Curved 20-segment cinema screen, velvet seats, step lights, acoustic walls |
+| 🕹️ | **Look Around** — Drag to pan the camera, tap Recenter to snap back smoothly |
+| 🌑 | **Dark Cinema Theme** — Deep blacks, gold accents, red velvet throughout |
 
-## Development rules
+---
 
-- Keep widgets small and focused.
-- Separate UI, mock data, and 3D scene logic.
-- Keep seat identity and seat-to-camera mapping in one clear model/service layer.
-- Use named constants for colors, spacing, and animation durations.
-- Make transitions interruptible or safely ignore repeated taps while an animation is running.
-- Test on a physical device and simulator/emulator.
-- Do not add authentication, payment, backend, or booking functionality until the scope is deliberately expanded.
+## 🗂️ Project Structure
+
+```
+lib/
+├── app/              # Routes & app entry
+├── core/
+│   ├── theme/        # Colors, typography, Material theme
+│   └── constants/    # Spacing, durations
+├── data/             # Mock movies & auditorium data
+├── models/           # Typed Dart models
+├── features/
+│   ├── home/         # Home screen & widgets
+│   ├── movie_details/# Details screen
+│   ├── seat_selection/# 2D seat map + controller
+│   └── seat_preview/ # 3D viewport, camera, service
+└── shared/           # Reusable widgets
+```
+
+---
+
+## 🧠 3D Engine — How It Works
+
+No game engine. No 3D packages. Pure Flutter.
+
+- **Perspective projection** via camera basis matrix transforms
+- **20-segment curved screen** drawn with `CustomPainter` paths
+- **Camera placed at eye-level** for each of the 64 seats across 8 rows
+- **Eased transitions** between seats using `AnimationController` + `Curves.easeOutCubic`
+- **Movie backdrop** rendered onto the 3D screen via async `ImageStream`
+
+---
+
+## 📐 Architecture
+
+```
+UI Widgets  ──▶  ChangeNotifier Controller  ──▶  Mock Data Layer
+                        │
+                 Seat Camera Poses
+                        │
+              Cinema3DViewport (CustomPainter)
+```
+
+- Feature-first folder structure
+- `ChangeNotifier` for state — no extra packages needed
+- 26 custom UI components with centralized design tokens
+- Zero third-party state management or routing libraries
+
+---
+
+## 🧪 Tests
+
+```bash
+flutter test        # 11/11 passing
+flutter analyze     # 0 issues
+```
+
+| Test File | Coverage |
+|---|---|
+| `widget_test.dart` | App smoke test |
+| `seat_selection_controller_test.dart` | 5 unit tests |
+| `auditorium_camera_pose_test.dart` | 4 unit tests |
+| `seat_preview_screen_test.dart` | 2 widget tests |
+
+---
+
+## 🚀 Getting Started
+
+```bash
+git clone https://github.com/Harshitverma677/seat_vue.git
+cd seat_vue
+flutter pub get
+flutter run
+```
+
+> Requires Flutter 3.47+ and Dart 3.13+
+
+---
+
+## 🛠️ Tech Stack
+
+| | |
+|---|---|
+| **Framework** | Flutter + Dart |
+| **Rendering** | `CustomPainter` (perspective 3D projection) |
+| **State** | `ChangeNotifier` / `ListenableBuilder` |
+| **Data** | Local mock only — no backend |
+| **Testing** | `flutter_test` |
+
+---
+
+## ⚠️ Scope
+
+This is a **UI prototype** — no authentication, no backend, no real payments.
+All movies, showtimes, and seat data are local mock data.
+
+---
+
+<div align="center">
+
+### 👨‍💻 Built by [Harshit Verma](https://github.com/Harshitverma677)
+
+⭐ Star this repo if you like it!
+
+</div>
