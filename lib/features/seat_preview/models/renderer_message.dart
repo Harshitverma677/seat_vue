@@ -95,3 +95,4 @@ class RendererEvent {
   bool get isTransitionCompleted => type == 'cameraTransitionCompleted';
   bool get isError => type == 'sceneError';
 }
+

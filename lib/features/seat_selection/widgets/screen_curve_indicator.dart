@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_spacing.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
 
-/// Cinema screen indicator with curved top arc and ambient glow.
+/// Cinema screen indicator with curved top arc and ambient glow matching reference video.
 class ScreenCurveIndicator extends StatelessWidget {
   final String label;
 
@@ -15,26 +13,21 @@ class ScreenCurveIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         CustomPaint(
-          size: const Size(double.infinity, 38),
+          size: const Size(double.infinity, 32),
           painter: _ScreenArcPainter(),
         ),
         const SizedBox(height: AppSpacing.xs),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.blur_on_rounded, size: 14, color: AppColors.textMuted),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textMuted,
-                letterSpacing: 3.0,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        Text(
+          label.split('').join(' '),
+          style: const TextStyle(
+            color: Color(0xFF6E7280),
+            letterSpacing: 4.0,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ],
     );
@@ -44,63 +37,65 @@ class ScreenCurveIndicator extends StatelessWidget {
 class _ScreenArcPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final width = size.width;
+    final height = size.height;
 
     // Glowing subtle gradient fill under screen
+    final rect = Rect.fromLTWH(0, 0, width, height);
     final fillPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          AppColors.primary.withValues(alpha: 0.15),
+          Colors.white.withValues(alpha: 0.12),
           Colors.transparent,
         ],
       ).createShader(rect)
       ..style = PaintingStyle.fill;
 
-    final fillPath = Path()
-      ..moveTo(size.width * 0.08, size.height * 0.9)
+    final arcPath = Path()
+      ..moveTo(width * 0.05, height * 0.85)
       ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.1,
-        size.width * 0.92,
-        size.height * 0.9,
-      )
-      ..lineTo(size.width * 0.92, size.height)
-      ..lineTo(size.width * 0.08, size.height)
+        width * 0.5,
+        height * 0.05,
+        width * 0.95,
+        height * 0.85,
+      );
+
+    final fillPath = Path.from(arcPath)
+      ..lineTo(width * 0.95, height)
+      ..lineTo(width * 0.05, height)
       ..close();
 
     canvas.drawPath(fillPath, fillPaint);
 
-    // Glow line
+    // Soft outer glow line
     final glowPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.45)
+      ..color = Colors.white.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.0
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      ..strokeWidth = 4.5
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
 
-    final linePath = Path()
-      ..moveTo(size.width * 0.08, size.height * 0.9)
-      ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.1,
-        size.width * 0.92,
-        size.height * 0.9,
-      );
+    canvas.drawPath(arcPath, glowPaint);
 
-    canvas.drawPath(linePath, glowPaint);
-
-    // Crisp top line
+    // Crisp top line with gradient fading at ends
     final strokePaint = Paint()
-      ..color = AppColors.screenArc
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.1),
+          Colors.white.withValues(alpha: 0.95),
+          Colors.white.withValues(alpha: 0.95),
+          Colors.white.withValues(alpha: 0.1),
+        ],
+        stops: const [0.0, 0.25, 0.75, 1.0],
+      ).createShader(rect)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawPath(linePath, strokePaint);
+    canvas.drawPath(arcPath, strokePaint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-

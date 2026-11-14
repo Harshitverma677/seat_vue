@@ -8,8 +8,13 @@ class SeatSelectionController extends ChangeNotifier {
   final Set<String> _selectedSeatIds = <String>{};
   String? _activePreviewSeatId;
 
-  SeatSelectionController({double basePrice = 16.50})
-      : _seats = MockAuditoriums.generateAuditoriumSeats(basePrice: basePrice);
+  SeatSelectionController({
+    double basePrice = 12.50,
+    double reclinerPrice = 16.00,
+  }) : _seats = MockAuditoriums.generateAuditoriumSeats(
+          standardPrice: basePrice,
+          reclinerPrice: reclinerPrice,
+        );
 
   List<Seat> get seats => List.unmodifiable(_seats);
   Set<String> get selectedSeatIds => Set.unmodifiable(_selectedSeatIds);

@@ -102,7 +102,7 @@ class MockMovies {
         time: '14:30',
         hallName: 'IMAX Laser Hall 1',
         experienceType: 'IMAX 3D Laser',
-        basePrice: 16.50,
+        basePrice: 12.50,
       ),
       Showtime(
         id: 'st_2_$movieId',

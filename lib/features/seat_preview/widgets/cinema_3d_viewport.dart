@@ -47,10 +47,15 @@ class _Cinema3DViewportState extends State<Cinema3DViewport> {
   }
 
   void _loadScreenImage() {
-    if (widget.movie.backdropUrl.isEmpty) return;
-
     _imageStream?.removeListener(_imageListener!);
-    final ImageProvider provider = NetworkImage(widget.movie.backdropUrl);
+
+    ImageProvider provider;
+    if (widget.movie.backdropUrl.isNotEmpty && widget.movie.backdropUrl.startsWith('http')) {
+      provider = NetworkImage(widget.movie.backdropUrl);
+    } else {
+      provider = const AssetImage('assets/images/cinema_screen_default.png');
+    }
+
     _imageStream = provider.resolve(ImageConfiguration.empty);
     _imageListener = ImageStreamListener(
       (ImageInfo info, bool _) {
@@ -61,7 +66,16 @@ class _Cinema3DViewportState extends State<Cinema3DViewport> {
         }
       },
       onError: (exception, stackTrace) {
-        // Fallback to procedural cinematic screen graphics
+        // Fallback to local bundled asset
+        final fallback = const AssetImage('assets/images/cinema_screen_default.png')
+            .resolve(ImageConfiguration.empty);
+        fallback.addListener(
+          ImageStreamListener((ImageInfo fallbackInfo, bool _) {
+            if (mounted) {
+              setState(() => _screenImage = fallbackInfo.image);
+            }
+          }),
+        );
       },
     );
     _imageStream!.addListener(_imageListener!);

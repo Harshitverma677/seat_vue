@@ -5,11 +5,14 @@ import 'package:seat_vue/features/seat_preview/screens/seat_preview_screen.dart'
 import 'package:seat_vue/features/seat_selection/state/seat_selection_controller.dart';
 
 void main() {
-  testWidgets('SeatPreviewScreen renders with realistic cinema UI elements', (WidgetTester tester) async {
+  testWidgets('SeatPreviewScreen renders matching the reference recording', (WidgetTester tester) async {
     final movie = MockMovies.sampleMovies.first;
     final showtime = MockMovies.getShowtimesForMovie(movie.id).first;
-    final controller = SeatSelectionController(basePrice: showtime.basePrice);
-    controller.toggleSeat('F8'); // Test seat from Reference A
+    final controller = SeatSelectionController(
+      basePrice: showtime.basePrice,
+      reclinerPrice: 16.00,
+    );
+    controller.toggleSeat('F8'); // Test seat from Reference video (Frame 7)
 
     await tester.pumpWidget(
       MaterialApp(
@@ -23,17 +26,21 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify Reference A Top Bar elements
-    expect(find.text('3D SEAT PREVIEW'), findsOneWidget);
-    expect(find.text('Recenter'), findsOneWidget);
+    // Verify Top Floating Label: "View from F8"
+    expect(find.text('View from F8'), findsOneWidget);
 
-    // Verify Gesture Hint
-    expect(find.text('Drag to look around · Tap a seat below to switch'), findsOneWidget);
+    // Verify Category Badge: "SWEET SPOT"
+    expect(find.text('SWEET SPOT'), findsOneWidget);
 
-    // Verify Reference A Bottom Sheet Info
-    expect(find.text('F8'), findsWidgets); // Badge & selector
-    expect(find.textContaining('Row F · Seat 8'), findsOneWidget);
-    expect(find.text('2D Seat Map'), findsOneWidget);
+    // Verify Main Seat Label: "Row F, Seat 8"
+    expect(find.text('Row F, Seat 8'), findsOneWidget);
+
+    // Verify Metric Card Labels
+    expect(find.text('to screen'), findsOneWidget);
+    expect(find.text('field of view'), findsOneWidget);
+
+    // Verify Action Buttons
+    expect(find.text('Change seat'), findsOneWidget);
+    expect(find.textContaining('Book · €12.50'), findsOneWidget);
   });
 }
-

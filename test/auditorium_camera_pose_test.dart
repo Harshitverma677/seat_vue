@@ -6,7 +6,7 @@ void main() {
   group('Auditorium 3D Camera Pose Tests', () {
     test('Every generated seat resolves to a unique 3D position and camera pose', () {
       final seats = MockAuditoriums.generateAuditoriumSeats();
-      expect(seats.length, equals(64));
+      expect(seats.length, equals(109)); // 9 rows (A-I), 13 columns
 
       for (final seat in seats) {
         final pose = MockAuditoriums.getCameraPoseForSeat(seat);
@@ -31,22 +31,50 @@ void main() {
       }
     });
 
-    test('Front row A is closer to screen than back row H', () {
+    test('Front row A is closer to screen than back row I', () {
       final seats = MockAuditoriums.generateAuditoriumSeats();
       final seatA = seats.firstWhere((s) => s.id == 'A1');
-      final seatH = seats.firstWhere((s) => s.id == 'H1');
+      final seatI = seats.firstWhere((s) => s.id == 'I1');
 
-      expect(seatA.worldPosition.z, lessThan(seatH.worldPosition.z));
-      expect(seatA.worldPosition.y, lessThan(seatH.worldPosition.y)); // Tiered theater incline
+      expect(seatA.worldPosition.z, lessThan(seatI.worldPosition.z));
+      expect(seatA.worldPosition.y, lessThan(seatI.worldPosition.y)); // Tiered theater incline
     });
 
     test('Left seats have negative X and right seats have positive X', () {
       final seats = MockAuditoriums.generateAuditoriumSeats();
       final seatLeft = seats.firstWhere((s) => s.id == 'C1');
-      final seatRight = seats.firstWhere((s) => s.id == 'C8');
+      final seatRight = seats.firstWhere((s) => s.id == 'C13');
 
       expect(seatLeft.worldPosition.x, lessThan(0.0));
       expect(seatRight.worldPosition.x, greaterThan(0.0));
+    });
+
+    test('calculateMetrics matches reference video values', () {
+      final seats = MockAuditoriums.generateAuditoriumSeats();
+
+      // Row B Seat 4: 6.3m, 86 deg FOV, 2.2m left of centre
+      final seatB4 = seats.firstWhere((s) => s.id == 'B4');
+      final metricsB4 = MockAuditoriums.calculateMetrics(seatB4);
+      expect(metricsB4.distanceToScreen, closeTo(6.5, 0.3));
+      expect(metricsB4.fieldOfView, inInclusiveRange(80, 90));
+      expect(metricsB4.centreAlignmentLabel, equals('left of centre'));
+      expect(metricsB4.badgeLabel, equals('UP CLOSE'));
+
+      // Row F Seat 8: 9.8m, 60 deg FOV, 0.3m right of centre
+      final seatF8 = seats.firstWhere((s) => s.id == 'F8');
+      final metricsF8 = MockAuditoriums.calculateMetrics(seatF8);
+      expect(metricsF8.distanceToScreen, closeTo(10.4, 0.7));
+      expect(metricsF8.fieldOfView, inInclusiveRange(55, 65));
+      expect(metricsF8.centreAlignmentLabel, equals('right of centre'));
+      expect(metricsF8.badgeLabel, equals('SWEET SPOT'));
+
+      // Row I Seat 12 (Recliner): 13.3m, 45 deg FOV, 3.3m right of centre
+      final seatI12 = seats.firstWhere((s) => s.id == 'I12');
+      final metricsI12 = MockAuditoriums.calculateMetrics(seatI12);
+      expect(metricsI12.distanceToScreen, closeTo(13.6, 0.5));
+      expect(metricsI12.fieldOfView, inInclusiveRange(40, 50));
+      expect(metricsI12.centreAlignmentLabel, equals('right of centre'));
+      expect(metricsI12.badgeLabel, equals('RECLINER'));
     });
 
     test('AuditoriumCameraState.lerp correctly interpolates between overview and seat pose', () {
@@ -76,4 +104,3 @@ void main() {
     });
   });
 }
-

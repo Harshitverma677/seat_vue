@@ -34,6 +34,7 @@ enum SeatStatus {
 /// Category or tier of seat.
 enum SeatType {
   standard,
+  recliner,
   vip,
 }
 

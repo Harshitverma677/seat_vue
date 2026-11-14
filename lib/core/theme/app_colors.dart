@@ -12,27 +12,32 @@ class AppColors {
   static const Color surfaceBorder = Color(0xFF282F48);
 
   // Accents
-  static const Color primary = Color(0xFFFFB300); // Amber Gold
-  static const Color primaryLight = Color(0xFFFFCA28);
-  static const Color primaryDark = Color(0xFFFF8F00);
-  static const Color primaryGlow = Color(0x4DFFB300);
+  static const Color primary = Color(0xFF5CD498); // Reference Mint Green (#5CD498)
+  static const Color primaryLight = Color(0xFF7DE0AC);
+  static const Color primaryDark = Color(0xFF38B875);
+  static const Color primaryGlow = Color(0x555CD498);
+
+  static const Color mintGreen = Color(0xFF5CD498); // Reference Accent
+  static const Color mintGreenGlow = Color(0x665CD498);
 
   static const Color secondary = Color(0xFF6366F1); // Indigo / Neon Purple
   static const Color secondaryLight = Color(0xFF818CF8);
 
-  static const Color crimson = Color(0xFFEF4444); // Cinema Crimson
-  static const Color success = Color(0xFF10B981); // Emerald Green
+  static const Color crimson = Color(0xFF8E1B24); // Red Velvet Cinema Seats
+  static const Color success = Color(0xFF5CD498); // Mint Green
 
-  // Seat States
-  static const Color seatAvailable = Color(0xFF2F374E);
-  static const Color seatAvailableBorder = Color(0xFF475375);
-  static const Color seatSelected = Color(0xFFFFB300);
-  static const Color seatSelectedBorder = Color(0xFFFFD54F);
-  static const Color seatSelectedGlow = Color(0x66FFB300);
-  static const Color seatUnavailable = Color(0xFF161924);
-  static const Color seatUnavailableBorder = Color(0xFF1F2433);
-  static const Color seatVip = Color(0xFFA855F7);
-  static const Color seatVipBorder = Color(0xFFC084FC);
+  // Seat States (Matching Video Reference)
+  static const Color seatAvailable = Color(0xFF2C2F36); // Solid dark gray
+  static const Color seatAvailableBorder = Color(0xFF3A3E48);
+  static const Color seatSelected = Color(0xFF5CD498); // Mint Green
+  static const Color seatSelectedBorder = Color(0xFF7DE0AC);
+  static const Color seatSelectedGlow = Color(0x775CD498);
+  static const Color seatUnavailable = Colors.transparent; // Outlined only
+  static const Color seatUnavailableBorder = Color(0xFF353942); // Taken stroke
+  static const Color seatRecliner = Color(0xFF5E2B32); // Reddish terracotta
+  static const Color seatReclinerBorder = Color(0xFF78363F);
+  static const Color seatVip = Color(0xFF5E2B32);
+  static const Color seatVipBorder = Color(0xFF78363F);
 
   // Screen Indicator Glow
   static const Color screenArc = Color(0xFFE2E8F0);

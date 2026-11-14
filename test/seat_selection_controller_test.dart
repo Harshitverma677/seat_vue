@@ -6,54 +6,54 @@ import 'package:seat_vue/models/seat.dart';
 void main() {
   group('SeatSelectionController Tests', () {
     test('Initializes with full auditorium layout', () {
-      final controller = SeatSelectionController(basePrice: 15.0);
-      expect(controller.seats.length, equals(64)); // 8 rows x 8 seats
+      final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
+      expect(controller.seats.length, equals(109)); // 9 rows (A-I), 13 cols
       expect(controller.selectedSeatIds, isEmpty);
       expect(controller.totalPrice, equals(0.0));
     });
 
     test('Toggles available seat selection correctly', () {
-      final controller = SeatSelectionController(basePrice: 15.0);
+      final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
 
-      // C2 is available
-      controller.toggleSeat('C2');
-      expect(controller.isSelected('C2'), isTrue);
-      expect(controller.activePreviewSeatId, equals('C2'));
-      expect(controller.totalPrice, equals(15.0));
+      // C1 is available
+      controller.toggleSeat('C1');
+      expect(controller.isSelected('C1'), isTrue);
+      expect(controller.activePreviewSeatId, equals('C1'));
+      expect(controller.totalPrice, equals(12.50));
 
       // Toggle off
-      controller.toggleSeat('C2');
-      expect(controller.isSelected('C2'), isFalse);
+      controller.toggleSeat('C1');
+      expect(controller.isSelected('C1'), isFalse);
       expect(controller.activePreviewSeatId, isNull);
       expect(controller.totalPrice, equals(0.0));
     });
 
     test('Unavailable seats cannot be selected', () {
-      final controller = SeatSelectionController(basePrice: 15.0);
+      final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
 
-      // C4 is in MockAuditoriums.unavailableSeatIds
-      expect(MockAuditoriums.unavailableSeatIds.contains('C4'), isTrue);
+      // C5 is in MockAuditoriums.unavailableSeatIds
+      expect(MockAuditoriums.unavailableSeatIds.contains('C5'), isTrue);
 
-      controller.toggleSeat('C4');
-      expect(controller.isSelected('C4'), isFalse);
+      controller.toggleSeat('C5');
+      expect(controller.isSelected('C5'), isFalse);
       expect(controller.selectedSeatIds, isEmpty);
     });
 
-    test('VIP seat has correct tier and pricing', () {
-      final controller = SeatSelectionController(basePrice: 15.0);
+    test('Recliner seat has correct tier and pricing', () {
+      final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
 
-      // Row H is VIP
-      final vipSeat = controller.getSeatById('H2');
-      expect(vipSeat, isNotNull);
-      expect(vipSeat!.type, equals(SeatType.vip));
-      expect(vipSeat.price, equals(20.0)); // 15 + 5
+      // Row I is Recliner
+      final reclinerSeat = controller.getSeatById('I12');
+      expect(reclinerSeat, isNotNull);
+      expect(reclinerSeat!.type, equals(SeatType.recliner));
+      expect(reclinerSeat.price, equals(16.00));
 
-      controller.toggleSeat('H2');
-      expect(controller.totalPrice, equals(20.0));
+      controller.toggleSeat('I12');
+      expect(controller.totalPrice, equals(16.00));
     });
 
     test('setActivePreviewSeat sets active preview without breaking selection', () {
-      final controller = SeatSelectionController(basePrice: 15.0);
+      final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
 
       controller.toggleSeat('B1');
       controller.toggleSeat('B2');
@@ -64,4 +64,3 @@ void main() {
     });
   });
 }
-
