@@ -1,51 +1,61 @@
-# Instructions for AI Coding Agents
+# Instructions for the Seat View Coding Agent
 
-You are working on Seat View, a Flutter UI-only movie-booking prototype. Read `00_DOCS_INDEX.md` first, then read the documents listed for the current step before editing code. For all 3D preview work, also read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. When upgrading the current CustomPainter renderer to actual 3D meshes, read `12_TRUE_3D_RENDERER_MIGRATION.md` before editing.
+You are working in the existing Flutter repository `seat_vue`. The product name shown in the app and documentation is **Seat View**.
 
-## Product goal
+## Mandatory first actions
 
-Build a Flutter app whose defining feature is a smooth transition from a 2D cinema seat map to a 3D auditorium camera view from the selected seat.
+1. Read `README.md`, `00_DOCS_INDEX.md`, `01_PRODUCT_SPEC.md`, `02_ARCHITECTURE_AND_RULES.md` and this file.
+2. Read all implementation documents relevant to the phase you are about to change.
+3. Inspect the actual repository and compare it with the docs.
+4. Run baseline Flutter analysis and tests.
+5. Present a concise implementation plan and list of files to change before broad edits.
 
-## Scope guardrails
+## Reference fidelity
 
-Do implement:
-- Flutter screens and widgets.
-- Local mock movie, cinema, showtime, and seat data.
-- Interactive 2D seat selection.
-- A true 3D first-person auditorium renderer using actual meshes, perspective camera, depth/occlusion, realistic materials, lighting and shadows. The target view has padded foreground seat backs, neighboring seats, and a screen showing a bundled static placeholder image.
-- Seat-to-camera mapping.
-- Smooth camera transitions and preview navigation.
+The user's screen recording and detailed written UI specification are the primary design references. Reproduce the described layout, colors, seat map, camera movement, metrics and draggable sheet closely. Do not invent unrelated design elements. If the video cannot be inspected by your environment, state that limitation and use the provided screenshots/specification; do not claim to have watched it.
 
-Do not implement in this phase:
-- Authentication or user accounts.
-- Firebase or another backend.
-- Real-time APIs or live seat availability.
-- Payment gateway.
-- Real ticket booking, reservation, or QR ticket issuance.
+## Critical 3D rule
 
-## Working method
+Do not call 2D CustomPainter polygons, gradients or perspective-projected paths “true 3D”. The final auditorium must use actual 3D meshes/scene objects, perspective camera, depth/occlusion, materials and lighting.
 
-1. Identify the current step from the user's instruction.
-2. Read the corresponding step document and its dependencies in `00_DOCS_INDEX.md`.
-3. Inspect the existing code before changing it.
-4. Make the smallest coherent implementation for that step.
-5. Keep the app runnable after each step.
-6. Do not replace working code unnecessarily.
-7. Explain files changed, behavior implemented, and commands to verify.
-8. Update the relevant documentation if architecture or decisions change.
+## Work in phases
 
-## Technical constraints
+- Phase 1: Audit and theme.
+- Phase 2: Seat selection, showtime, legend and checkout.
+- Phase 3: Renderer comparison and one-seat proof of concept.
+- Phase 4: Full auditorium scene.
+- Phase 5: camera transitions and look-around.
+- Phase 6: POV HUD, mini-map, draggable sheet and metrics.
+- Phase 7: tests, platform verification and polish.
 
-- Use typed Dart models.
-- Keep mock data separate from UI widgets.
-- Keep seat IDs stable.
-- Keep seat selection state in one source of truth.
-- Keep 3D scene lifecycle and camera control outside ordinary UI widgets.
-- Do not recreate the 3D renderer on every Flutter rebuild.
-- Verify the chosen true 3D renderer on the project's Flutter version and target Android/iOS devices before building the full scene. Do not treat CustomPainter polygons as actual 3D meshes.
-- Document model asset sources and licenses.
-- Avoid magic numbers and duplicated styles.
+After each phase:
+- Run `flutter analyze` and relevant tests.
+- Fix regressions before continuing.
+- Report what changed and what remains.
+- Do not claim completion without running the feature.
 
-## Acceptance criteria
+## Preserve existing functionality
 
-The core prototype is complete when a user can browse a sample movie, open its details, choose a sample showtime, select a seat, see a smooth transition into the 3D auditorium from that seat's viewing position, switch to another seat, and return to the seat map with the selection preserved.
+Do not rewrite the app from scratch. Preserve stable seat IDs, selection logic, navigation, reusable camera calculations and mock data where valid. Do not delete the current viewport until the new 3D proof of concept passes on Android and iOS.
+
+## Scope restrictions
+
+This phase is a prototype. Do not add authentication, backend, live cinema inventory, real ticketing or payment processing. Book should display a mock confirmation only.
+
+## Dependency discipline
+
+Do not install every renderer option. Evaluate current package status and select one. Update `pubspec.yaml` only after the renderer decision. Document why each new dependency is required.
+
+## Geometry discipline
+
+Use a shared physical coordinate model including both aisle gaps. Do not use a continuous seat-column formula that ignores aisles. Compute metrics from the selected seat's physical position. Treat B4/F8/I12 values as approximate calibration targets, not per-seat hardcoded outputs.
+
+## Final response expected from the agent
+
+Provide:
+- Summary of implementation.
+- Files changed.
+- Renderer and dependency decisions.
+- Tests and builds actually run.
+- Android/iOS verification status.
+- Known issues and incomplete requirements.

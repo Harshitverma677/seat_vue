@@ -1,111 +1,79 @@
 # Architecture and Implementation Rules
 
-## Suggested folder structure
+## 1. Inspect before changing
 
-```text
-lib/
-  main.dart
-  app/
-    app.dart
-    routes.dart
-  core/
-    theme/
-      app_colors.dart
-      app_theme.dart
-    constants/
-      app_spacing.dart
-      app_durations.dart
-  data/
-    mock_movies.dart
-    mock_auditoriums.dart
-  models/
-    movie.dart
-    showtime.dart
-    seat.dart
-    seat_camera_pose.dart
-  features/
-    home/
-      screens/
-      widgets/
-    movie_details/
-      screens/
-      widgets/
-    seat_selection/
-      screens/
-      widgets/
-      state/
-    seat_preview/
-      screens/
-      widgets/
-      services/
-      state/
-  shared/
-    widgets/
-```
+Inspect the actual repository, especially existing seat models, state controller, route/navigation flow, viewport, camera service and mock data. Known paths from earlier inspection include:
 
-Adapt the structure if the project starts small, but keep responsibilities separate.
+- `lib/features/seat_preview/widgets/cinema_3d_viewport.dart`
+- `lib/features/seat_preview/services/auditorium_3d_service.dart`
+- `lib/features/seat_preview/models/auditorium_camera_state.dart`
+- `lib/features/seat_preview/screens/seat_preview_screen.dart`
+- `lib/features/seat_selection/state/seat_selection_controller.dart`
+- `lib/data/mock_auditoriums.dart`
 
-## Responsibility boundaries
+These paths are starting points, not guaranteed current paths. Verify them.
 
-- **Screens:** compose page-level UI and coordinate navigation.
-- **Widgets:** reusable visual elements such as movie cards, seat cells, and legends.
-- **Models:** typed data structures.
-- **Mock data:** sample movies, showtimes, auditorium layout, and seat availability.
-- **Seat-selection state:** selected seat IDs and selection rules.
-- **3D service:** load/dispose the scene, map seat IDs to camera poses, and animate the camera.
-- **3D preview screen:** display the renderer and controls; it should not contain all scene math.
+## 2. Separation of responsibilities
 
-## State ownership
+- Flutter owns app navigation, seat-selection state, showtime state, booking mock state, HUD and draggable sheet.
+- The 3D renderer owns scene objects, materials, lights, rendering and camera pose inside the scene.
+- A typed adapter/bridge translates Flutter commands and renderer events.
+- Mock data owns cinema, showtimes, seat availability, prices and auditorium dimensions.
+- Geometry calculations belong in a pure Dart service where practical, with unit tests.
 
-Keep one source of truth for selected seat IDs. The seat map and preview screen must read the same selection state. Returning from preview must not reset the selection.
+## 3. Preserve existing working behavior
 
-For the first version, a simple state solution is acceptable. Choose `setState` for very local state or a lightweight state-management package if shared state becomes awkward. Do not add complexity without a need.
+Preserve and reuse where valid:
+- Stable seat IDs and row/column mapping.
+- Selection and availability rules.
+- Existing navigation and app theme conventions.
+- Camera coordinate calculations, eye-height settings and recenter behavior if correct.
+- Existing animation/state logic where it can be adapted safely.
 
-## Seat and camera data contract
+Do not delete the current `CustomPainter` viewport or related services until the replacement 3D implementation passes the proof-of-concept acceptance tests on Android and iOS. Keep a fallback during migration if practical.
 
-A seat should have:
-- `id` — stable unique identifier, e.g. `C7`.
-- `rowLabel` — e.g. `C`.
-- `seatNumber` — e.g. `7`.
-- `status` — available, selected (derived locally), or unavailable.
-- `worldPosition` — position in the 3D auditorium coordinate system.
+## 4. State model
 
-A camera pose should have:
-- `seatId`
-- `cameraPosition`
-- `lookAtTarget`
-- Optional field of view.
+Use one source of truth for the selected seat. The selected seat must drive:
+- Seat-map highlight.
+- Checkout text and price.
+- 3D selected mesh material.
+- Camera position and look target.
+- POV badge and sheet title.
+- Mini-map highlight.
+- Metrics and zone label.
+- Mock booking confirmation.
 
-Keep all positions in the same coordinate system and units.
+Avoid separate duplicated selected-seat state in Flutter widgets and JavaScript.
 
-## 3D rendering engine decision
+## 5. Renderer communication
 
-Before building the complete auditorium, create a small technical spike to verify the selected Flutter-compatible renderer on the project's Flutter version and target devices.
+If using WebView + Three.js, define and document a versioned JSON message contract. Suggested Flutter-to-scene commands:
+- `loadAuditorium`
+- `selectSeat`
+- `setCameraPose`
+- `startCameraTransition`
+- `recenterCamera`
+- `setLookInput`
+- `returnToOverview`
 
-Evaluate:
-- Model loading (GLB/GLTF or supported alternative).
-- Camera positioning and smooth animation.
-- Materials and lighting.
-- Touch interaction and camera controls.
-- Android and iOS compatibility.
-- Performance and package maintenance.
+Suggested scene-to-Flutter events:
+- `sceneReady`
+- `cameraTransitionCompleted`
+- `cameraTransitionReversed`
+- `sceneError`
 
-A Flutter-embedded Three.js scene via WebView is one viable approach. A Flutter-native 3D package may also be evaluated. Do not assume a package is production-ready without testing. Record the final choice and limitations in the project README.
+Validate message types and payloads. Do not pass arbitrary JavaScript strings assembled from user-controlled values. Handle WebView lifecycle, loading failures and disposal.
 
-## Performance rules
+## 6. Dependencies
 
-- Load the 3D model once and reuse the scene.
-- Do not recreate the renderer on every Flutter rebuild.
-- Dispose renderer resources/controllers when the screen is permanently removed.
-- Avoid excessive real-time shadows and high-polygon seat models on mobile.
-- Use instancing or shared geometry/materials if the chosen engine supports it.
-- Keep camera animation frame work inside the 3D renderer where possible.
+Do not add `three_js`, `flutter_gl`, and `webview_flutter` together by default. Evaluate viable approaches and choose one renderer. Keep dependency additions minimal and justify each package in the implementation report.
 
-## Coding rules
+## 7. Code quality
 
-- Use null safety and typed models.
-- Avoid hard-coded seat positions inside UI widgets.
-- Avoid magic numbers; use named constants.
-- Keep navigation and animation durations consistent.
-- Add comments for coordinate transforms and non-obvious camera calculations.
-- Do not introduce networking, authentication, payments, or backend dependencies in this phase.
+- Use typed models and small focused widgets/services.
+- Keep geometry math outside build methods.
+- Avoid magic numbers; define named auditorium constants.
+- Dispose controllers, subscriptions, WebViews and animation resources.
+- Handle loading, failure and unsupported-platform states.
+- Do not claim a feature works until it has been run and tested.

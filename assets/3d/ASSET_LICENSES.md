@@ -43,3 +43,4 @@ all copies or substantial portions of the Software.
 - **Creator**: Seat View Development Team
 - **License**: MIT License / Project Internal
 - **Description**: Procedurally modeled 3D cinema seat geometry using Three.js composite meshes (cushions with curved profiles, lumbar contour, padded headrest, armrests with integrated cup holders, steel pedestal and mounting bracket) with Physically-Based Rendering (PBR `MeshStandardMaterial`) and soft shadow mapping.
+

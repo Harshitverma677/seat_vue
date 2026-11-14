@@ -43,17 +43,17 @@ class SeatSelectionController extends ChangeNotifier {
     }
   }
 
-  /// Toggles selection of a seat. Unavailable seats cannot be selected.
+  /// Toggles selection of a single seat. Unavailable seats cannot be selected.
+  /// Selecting another seat replaces current selection; tapping current seat deselects it.
   void toggleSeat(String seatId) {
     final seat = getSeatById(seatId);
     if (seat == null || seat.isUnavailable) return;
 
     if (_selectedSeatIds.contains(seatId)) {
-      _selectedSeatIds.remove(seatId);
-      if (_activePreviewSeatId == seatId) {
-        _activePreviewSeatId = _selectedSeatIds.isNotEmpty ? _selectedSeatIds.last : null;
-      }
+      _selectedSeatIds.clear();
+      _activePreviewSeatId = null;
     } else {
+      _selectedSeatIds.clear();
       _selectedSeatIds.add(seatId);
       _activePreviewSeatId = seatId;
     }

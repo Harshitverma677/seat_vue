@@ -1,62 +1,47 @@
-# Step 7 — Seat-to-Camera Mapping and 3D Transitions
+# Step 7: Camera, POV and Transitions
 
-## Objective
+## Camera choreography
 
-Connect the selected 2D seat to its real 3D location and animate the camera into that seat's viewing position.
+Use an approximately 1200 ms transition with `Curves.easeInOutCubic` or the renderer's equivalent easing.
 
-## Read first
+### Stage 1: 0%–35%
+- Cross-fade from the 2D selection UI.
+- Move to a top-down overhead 3D camera.
+- Show the auditorium rows and the selected mint-green seat in context.
 
-- `README.md`
-- `01_PRODUCT_SPEC.md`
-- `02_ARCHITECTURE_AND_RULES.md`
-- `07_STEP_05_SEAT_MAP.md`
-- `08_STEP_06_3D_AUDITORIUM.md`
+### Stage 2: 35%–100%
+- Interpolate camera position and look target along a smooth curved path.
+- Finish at the selected seat's seated eye-level camera pose.
+- Aim at the center of the cinema screen.
+- Use the selected seat's actual world position and orientation.
 
-## Functions performed in this step
+Do not linearly interpolate only between two arbitrary positions if it creates a camera collision or visibly unnatural movement. Use a curve or staged interpolation and validate the path.
 
-1. Define a `SeatCameraPose` model.
-2. Map every seat ID to a world-space seat position.
-3. Calculate camera eye position using seat position plus eye-height offset.
-4. Calculate a look-at target aimed toward the screen.
-5. Pass the selected seat ID from the seat map into the preview.
-6. Animate camera position and orientation from the current pose to the target pose.
-7. Add a smooth return transition to the seat map.
-8. Support changing the preview seat without rebuilding the whole scene.
-9. Prevent conflicting animations from rapid repeated taps.
+## Camera pose
 
-## Camera mapping concept
+Derive the camera origin from:
+- Selected seat world position.
+- Seat forward direction.
+- Configured seated eye-height offset.
+- Small configurable forward/back offset to avoid intersecting the seat mesh.
 
-For a seat:
-- `cameraPosition` is the modeled eye point at that seat.
-- `lookAtTarget` is the screen center or a carefully chosen point on the screen.
-- Camera orientation is derived from `cameraPosition` and `lookAtTarget`.
-- Use a small eye-height offset above the seat's base position.
+The screen look target should be a real scene coordinate. Camera pose must vary for front, middle, back, center and side seats.
 
-Do not use one hard-coded camera pose for all seats. Center seats, side seats, front rows, and back rows should produce visibly different perspectives.
+## Interactive look-around
 
-## Transition behavior
+After the camera settles:
+- Enable subtle horizontal and vertical drag.
+- Clamp yaw and pitch to comfortable limits.
+- Do not allow users to rotate behind the seat or point the camera through the floor/ceiling.
+- Provide recenter behavior if the design includes it.
+- Disable or reduce look input while a transition is running.
 
-- Seat map → preview: animate from the overview/entry camera to the selected seat camera.
-- Seat A → Seat B: animate from A's pose to B's pose.
-- Preview → seat map: animate back to the overview pose, then return to the map.
-- Keep the selected seat highlighted after returning.
+## Reverse transition
 
-Use an eased interpolation for position and a safe orientation interpolation supported by the renderer. Avoid abrupt camera snaps.
+Back and Change seat must:
+1. Close or collapse the POV sheet as appropriate.
+2. Animate camera back to overhead.
+3. Cross-fade back to the 2D seat map.
+4. Preserve selected seat and showtime state.
 
-## Deliverables
-
-- Seat-to-camera pose mapping.
-- Camera transition controller/service.
-- Preview seat switching.
-- Return transition.
-- A documented animation duration and curve.
-
-## Completion checklist
-
-- [ ] Each seat ID resolves to a camera pose.
-- [ ] Different seats show different viewing angles.
-- [ ] Camera moves smoothly to the selected seat.
-- [ ] Switching seats animates rather than snapping.
-- [ ] Back navigation returns smoothly.
-- [ ] Rapid taps do not corrupt camera state.
-- [ ] The selected seat remains selected on return.
+Prevent double taps from starting overlapping transitions. Expose transition completion/error events to Flutter.

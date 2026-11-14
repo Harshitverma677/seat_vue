@@ -1,47 +1,25 @@
-# Step 1 — Flutter Project Foundation
+# Step 1: Repository Foundation and Audit
 
 ## Objective
 
-Create a clean Flutter project that runs on the target devices and has a maintainable starting structure.
+Understand the current `seat_vue` Flutter repository before refactoring.
 
-## Read first
+## Tasks
 
-- `README.md`
-- `01_PRODUCT_SPEC.md`
-- `02_ARCHITECTURE_AND_RULES.md`
-
-## Functions performed in this step
-
-1. Create the Flutter application.
-2. Confirm Flutter and Dart versions.
-3. Configure Android and iOS targets.
-4. Add the initial folder structure.
-5. Add app entry point and a minimal app widget.
-6. Configure a temporary dark theme.
-7. Verify the app launches on an emulator/simulator and physical device if available.
-8. Initialize Git and make the first commit if desired.
-
-## Suggested commands
-
-```bash
-flutter doctor -v
-flutter create movie_booking_ui
-cd movie_booking_ui
-flutter run
-```
+1. Inspect the full `lib/` structure and `pubspec.yaml`.
+2. Identify app entry point, routes, screens, state management, seat models and mock data.
+3. Trace the current seat-selection-to-preview flow.
+4. Identify which 3D viewport elements are actually 2D `CustomPainter` paths or polygons.
+5. Run `flutter pub get`, `flutter analyze` and the existing test suite before edits.
+6. Record the baseline results and any pre-existing failures.
 
 ## Deliverables
 
-- A running Flutter app.
-- Clean project structure.
-- No Firebase or backend packages.
-- No authentication or payment packages.
+- Short architecture summary.
+- File-by-file change plan.
+- List of reusable code and code that must be replaced.
+- Baseline analysis and test results.
 
-## Completion checklist
+## Gate
 
-- [ ] `flutter doctor -v` has no blocking issue for the chosen target.
-- [ ] App launches successfully.
-- [ ] Android build works.
-- [ ] iOS build works if Xcode is configured.
-- [ ] Folder structure is in place.
-- [ ] No out-of-scope dependencies have been added.
+Do not start broad refactoring until the audit is complete and the plan is presented. Distinguish pre-existing errors from newly introduced errors.

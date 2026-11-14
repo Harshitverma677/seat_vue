@@ -1,50 +1,32 @@
-# Documentation Index and Reading Order
+# Documentation Index
 
-This file is the entry point for developers and coding agents. Before implementing a step, read the documents listed for that step in the order shown. Follow the completion checklist before moving on.
+Read these files in order. Use the step documents as implementation gates.
 
-## Always read first
-
-1. [`README.md`](README.md) — project purpose, scope, and non-goals.
-2. [`01_PRODUCT_SPEC.md`](01_PRODUCT_SPEC.md) — user journey and functional requirements.
-3. [`02_ARCHITECTURE_AND_RULES.md`](02_ARCHITECTURE_AND_RULES.md) — code structure, state ownership, and implementation rules.
-
-## Step-by-step reading guide
-
-| Step | Goal | Read these files |
+| Order | Document | Purpose |
 |---|---|---|
-| 0 | Understand the project | `README.md`, `01_PRODUCT_SPEC.md`, `02_ARCHITECTURE_AND_RULES.md` |
-| 1 | Create Flutter foundation | `03_STEP_01_FOUNDATION.md`, then `02_ARCHITECTURE_AND_RULES.md` |
-| 2 | Build theme and reusable UI | `04_STEP_02_DESIGN_SYSTEM.md`, then `01_PRODUCT_SPEC.md` |
-| 3 | Build movie browsing UI | `05_STEP_03_MOVIE_DISCOVERY.md`, then `01_PRODUCT_SPEC.md` |
-| 4 | Build movie details and showtime selection | `06_STEP_04_MOVIE_DETAILS.md`, then `01_PRODUCT_SPEC.md` |
-| 5 | Build the 2D seat map | `07_STEP_05_SEAT_MAP.md`, then `01_PRODUCT_SPEC.md` and `02_ARCHITECTURE_AND_RULES.md` |
-| 6 | Add the 3D auditorium | `08_STEP_06_3D_AUDITORIUM.md`, then `02_ARCHITECTURE_AND_RULES.md` |
-| 7 | Connect seats to camera positions and animate transitions | `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, then `07_STEP_05_SEAT_MAP.md` and `08_STEP_06_3D_AUDITORIUM.md` |
-| 8 | Polish and test the prototype | `10_STEP_08_POLISH_AND_TESTING.md`, then all relevant step documents |
-| Any step | Give an AI coding agent project-wide instructions | `AGENT_INSTRUCTIONS.md` |
-| 3D upgrade | Replace 2D perspective drawing with a true 3D scene | `12_TRUE_3D_RENDERER_MIGRATION.md`, then `08_STEP_06_3D_AUDITORIUM.md`, `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, and `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md` |
+| 1 | `README.md` | Project summary and scope |
+| 2 | `01_PRODUCT_SPEC.md` | Screens, content, interaction requirements |
+| 3 | `02_ARCHITECTURE_AND_RULES.md` | Boundaries, state ownership, integration rules |
+| 4 | `AGENT_INSTRUCTIONS.md` | Required workflow and coding-agent behavior |
+| 5 | `03_STEP_01_FOUNDATION.md` | Repository audit and baseline |
+| 6 | `04_STEP_02_THEME_AND_COMPONENTS.md` | Palette, theme and reusable UI |
+| 7 | `05_STEP_03_SEAT_SELECTION.md` | Seat grid and selection state |
+| 8 | `06_STEP_04_SEAT_MAP_AND_CHECKOUT.md` | Screen arc, legend and checkout bar |
+| 9 | `07_STEP_05_3D_RENDERER.md` | Renderer evaluation and proof of concept |
+| 10 | `08_STEP_06_3D_AUDITORIUM.md` | Actual 3D auditorium scene and assets |
+| 11 | `09_STEP_07_CAMERA_AND_TRANSITIONS.md` | Overhead-to-seat POV and reverse transitions |
+| 12 | `13_POV_HUD_AND_BOTTOM_SHEET.md` | Floating controls and draggable sheet |
+| 13 | `14_SEAT_METRICS_AND_GEOMETRY.md` | Seat coordinates and metric calculations |
+| 14 | `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md` | Visual quality and mobile optimization |
+| 15 | `12_TRUE_3D_RENDERER_MIGRATION.md` | Safe migration from current 2D-painted viewport |
+| 16 | `10_STEP_08_POLISH_AND_TESTING.md` | Tests, acceptance criteria and final checks |
 
-## New 3D visual adjustment
+## Recommended implementation gates
 
-Before changing the 3D preview to match the user's screenshots, read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. It takes priority over earlier generic 3D-view wording where they conflict. For 3D work, read it together with `08_STEP_06_3D_AUDITORIUM.md` and `09_STEP_07_CAMERA_AND_TRANSITIONS.md`.
+- **Gate A:** Finish repository audit, theme and seat-selection UI. Run analysis and tests.
+- **Gate B:** Build a separate 3D proof of concept with one seat, a screen, lighting and a controllable camera. Verify on Android and iOS.
+- **Gate C:** Build the complete auditorium and connect selected-seat coordinates.
+- **Gate D:** Add camera choreography, POV HUD, draggable sheet and metrics.
+- **Gate E:** Run the full acceptance checklist and compare screenshots/video against the supplied reference.
 
-## True 3D renderer migration
-
-For the upgrade from the current CustomPainter-based perspective rendering to a genuine 3D cinema environment, read `12_TRUE_3D_RENDERER_MIGRATION.md` with `08_STEP_06_3D_AUDITORIUM.md`, `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, and `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. The migration document takes priority over any earlier wording that treats CustomPainter as the final 3D renderer.
-
-## Required order
-
-Do not start the 3D transition before:
-- The seat map works with mock data.
-- Each seat has a stable unique ID.
-- The 3D scene can load and render independently.
-- The seat-to-camera mapping format has been agreed.
-
-## Definition of done for the first UI prototype
-
-- Movie browsing, movie details, showtime selection, and seat selection work with mock data.
-- Tapping a seat opens the 3D preview for that exact seat.
-- The camera transition is smooth and repeatable.
-- Switching seats updates the camera target/position.
-- Returning to the seat map preserves the selected seat.
-- No authentication, payment, backend, or real booking is present.
+Do not skip gates or perform a destructive renderer replacement before Gate B passes.

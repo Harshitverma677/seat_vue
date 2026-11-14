@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 
-/// Clean horizontal seat status legend matching reference recording.
+/// Clean horizontal seat status legend matching 06_STEP_04_SEAT_MAP_AND_CHECKOUT.md.
 class SeatLegend extends StatelessWidget {
   const SeatLegend({super.key});
 
@@ -14,11 +14,12 @@ class SeatLegend extends StatelessWidget {
         _buildItem(
           label: 'Available',
           box: Container(
-            width: 14,
-            height: 14,
+            width: 13,
+            height: 13,
             decoration: BoxDecoration(
-              color: AppColors.seatAvailable,
-              borderRadius: BorderRadius.circular(3.5),
+              color: AppColors.availableFill,
+              borderRadius: BorderRadius.circular(3.0),
+              border: Border.all(color: AppColors.availableBorder, width: 1.0),
             ),
           ),
         ),
@@ -26,12 +27,12 @@ class SeatLegend extends StatelessWidget {
         _buildItem(
           label: 'Taken',
           box: Container(
-            width: 14,
-            height: 14,
+            width: 13,
+            height: 13,
             decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(3.5),
-              border: Border.all(color: const Color(0xFF353942), width: 1.4),
+              color: AppColors.takenFill,
+              borderRadius: BorderRadius.circular(3.0),
+              border: Border.all(color: AppColors.surfaceBorder, width: 1.0),
             ),
           ),
         ),
@@ -39,11 +40,12 @@ class SeatLegend extends StatelessWidget {
         _buildItem(
           label: 'Recliner',
           box: Container(
-            width: 14,
-            height: 14,
+            width: 13,
+            height: 13,
             decoration: BoxDecoration(
-              color: AppColors.seatRecliner,
-              borderRadius: BorderRadius.circular(3.5),
+              color: AppColors.reclinerFill,
+              borderRadius: BorderRadius.circular(3.0),
+              border: Border.all(color: AppColors.seatReclinerBorder, width: 1.0),
             ),
           ),
         ),
@@ -51,11 +53,11 @@ class SeatLegend extends StatelessWidget {
         _buildItem(
           label: 'Selected',
           box: Container(
-            width: 14,
-            height: 14,
+            width: 13,
+            height: 13,
             decoration: BoxDecoration(
-              color: AppColors.mintGreen,
-              borderRadius: BorderRadius.circular(3.5),
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(3.0),
             ),
           ),
         ),

@@ -9,7 +9,7 @@ import '../widgets/seat_grid.dart';
 import '../widgets/seat_legend.dart';
 import '../widgets/seat_summary_bar.dart';
 
-/// Seat Selection Screen matching the reference recording.
+/// Seat Selection Screen matching 01_PRODUCT_SPEC.md and 05_STEP_03_SEAT_SELECTION.md.
 class SeatSelectionScreen extends StatefulWidget {
   final Movie movie;
   final Showtime showtime;
@@ -26,9 +26,10 @@ class SeatSelectionScreen extends StatefulWidget {
 
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   late final SeatSelectionController _controller;
-  int _selectedShowtimeIndex = 1; // Default to 19:45 IMAX (as in video)
+  int _selectedShowtimeIndex = 1; // Default to 16:45 IMAX (specified in product spec)
 
-  final List<String> _showtimes = ['17:30 2D', '19:45 IMAX', '22:15 2D'];
+  // Showtime pills in the required order
+  final List<String> _showtimes = ['17:30 2D', '16:45 IMAX', '22:15 2D'];
 
   @override
   void initState() {
@@ -37,7 +38,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
       basePrice: widget.showtime.basePrice,
       reclinerPrice: 16.00,
     );
-    // Pre-select Row I Seat 12 by default as shown in Frame 0 of video
+    // Pre-select Row I Seat 12 by default as shown in reference recording
     _controller.toggleSeat('I12');
   }
 
@@ -51,16 +52,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     final activeSeat = _controller.activePreviewSeat ??
         (_controller.selectedSeats.isNotEmpty ? _controller.selectedSeats.last : null);
 
-    if (activeSeat == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a seat to preview'),
-          backgroundColor: AppColors.surface,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+    if (activeSeat == null) return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -76,7 +68,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF07080B), // Cinematic dark black
+      backgroundColor: AppColors.scaffold, // #0A0A0C
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -87,7 +79,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: const Color(0xFF181B22),
+                    backgroundColor: AppColors.surface, // #16161A
                     radius: 20,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
@@ -111,7 +103,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                         Text(
                           'Hall 3 · Fri 14 Nov',
                           style: TextStyle(
-                            color: const Color(0xFF8E929E).withValues(alpha: 0.9),
+                            color: AppColors.textSecondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -120,7 +112,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                     ),
                   ),
                   CircleAvatar(
-                    backgroundColor: const Color(0xFF181B22),
+                    backgroundColor: AppColors.surface,
                     radius: 20,
                     child: IconButton(
                       icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
@@ -137,9 +129,9 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4.0),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14161C),
+                  color: AppColors.surface, // #16161A
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF222530), width: 1.0),
+                  border: Border.all(color: AppColors.surfaceBorder, width: 1.0), // #26262C
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -151,13 +143,13 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                         duration: const Duration(milliseconds: 180),
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : Colors.transparent,
+                          color: isSelected ? AppColors.activePill : Colors.transparent, // #FFFFFF
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           _showtimes[index],
                           style: TextStyle(
-                            color: isSelected ? Colors.black : const Color(0xFF8E929E),
+                            color: isSelected ? AppColors.activePillText : AppColors.textSecondary,
                             fontSize: 12.5,
                             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                           ),
@@ -174,7 +166,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             const ScreenCurveIndicator(),
             const SizedBox(height: 12),
 
-            // 4. Interactive 9-Row Seat Grid
+            // 4. Interactive 9-Row x 14-Col Seat Grid
             Expanded(
               child: Center(
                 child: SingleChildScrollView(
@@ -195,7 +187,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               child: SeatLegend(),
             ),
 
-            // 6. Floating Bottom Booking Panel
+            // 6. Sticky Bottom Checkout Bar
             SafeArea(
               top: false,
               child: SeatSummaryBar(

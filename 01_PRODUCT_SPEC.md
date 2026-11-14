@@ -1,84 +1,76 @@
-# Seat View: Product Specification
-
 # Product Specification
 
-## Product vision
+## 1. Product goal
 
-Build a polished Flutter movie discovery and seat-preview prototype. Its standout feature is a 3D cinema preview that lets users understand what the screen looks like from a seat before proceeding.
+Create a premium dark cinema seat-booking experience. A user selects one seat on a 2D map, then enters a realistic 3D auditorium and sees the cinema screen from that exact seat's point of view.
 
-## Target platforms
+The reference recording and the user's written specification are the visual and behavioral sources of truth. Match their layout and interactions closely; do not invent unrelated screens or controls.
 
-- Android
-- iOS
-- Development and testing on macOS
+## 2. Scope and exclusions
 
-## Primary user journey
+### Included
+- `SeatSelectionScreen` with mock cinema information and showtimes.
+- 9 rows (`A`–`I`) and 14 seats per row.
+- Standard and recliner seat types, availability and single-seat selection.
+- Sticky checkout bar.
+- `SeatPovScreen` with real 3D auditorium rendering.
+- Two-stage camera transition, reverse transition and subtle look-around.
+- Floating POV controls and draggable details sheet.
+- Seat mini-map and computed viewing metrics.
+- Mock booking confirmation.
 
-Home → Movie details → Select showtime → Seat map → Select seat → 3D seat preview → Return to seat map or continue through a clearly simulated UI-only next step.
+### Excluded in this phase
+- Login or user accounts.
+- Backend services or database.
+- Live cinema listings, showtimes or seat availability.
+- Payment gateway, payment processing or real ticket issuance.
+- Production booking API integration.
 
-## Screens
+The Book action must produce a clearly identified local/mock confirmation only.
 
-### 1. Home / movie discovery
-- Dark cinematic visual theme.
-- Featured movie section.
-- Movie cards with poster, title, genre, and duration.
-- Sections for currently showing and coming soon.
-- All content comes from local mock data.
+## 3. Mock cinema content
 
-### 2. Movie details
-- Movie poster/backdrop.
-- Title, genre, duration, language, rating placeholder, and synopsis.
-- Sample cinema/showtime choices.
-- Continue to seat selection.
+- Cinema: `Meridian`
+- Hall: `Hall 3`
+- Display date: `Fri 14 Nov` (reference/mock copy, not a live date calculation)
+- Showtime pills, in the specified order:
+  - `17:30 2D`
+  - `16:45 IMAX` (selected by default)
+  - `22:15 2D`
 
-### 3. Seat selection
-- Cinema screen indicator.
-- Rows and numbered seats.
-- Available, selected, and unavailable states.
-- Seat legend.
-- Selected seat summary and sample price.
-- Clear action to open the 3D preview.
-- Support selecting and deselecting seats.
-- Use a consistent seat ID, such as `A1`, `A2`, `B1`.
+Keep this data configurable in a mock-data source. Do not hardcode it throughout widgets.
 
-### 4. 3D seat preview
-- 3D auditorium with screen, floor, walls, and seat rows.
-- Selected seat visibly identifiable in the scene if practical.
-- Camera positioned at the selected seat's modeled eye point.
-- Screen view should change according to the selected seat.
-- Controls to switch to another seat and return to the seat map.
-- Optional limited camera look-around, with sensible bounds.
+## 4. Seat inventory
 
-## Seat states
+- Rows A through I.
+- 14 seats in each row, numbered 1 through 14.
+- Three blocks: seats 1–3, aisle, seats 4–11, aisle, seats 12–14.
+- Rows A–H: Standard, €12.50.
+- Row I: Recliner, €16.00.
+- Each seat has a stable ID, row label, seat number, type, availability and world/map coordinate.
+- Availability must be mock data and deterministic for tests. The written request does not specify which seats are taken; choose a small, documented mock pattern and keep it configurable. Never make the selected seat unavailable.
 
-- `available`: selectable.
-- `selected`: selected locally by the user.
-- `unavailable`: disabled sample seat, not a live booking status.
+## 5. Screen flow
 
-Do not call unavailable seats "booked" unless the UI explicitly explains that this is mock data.
+1. User lands on `SeatSelectionScreen`.
+2. User may change showtime.
+3. User selects one available seat. Selecting another moves the selection; tapping the selected seat clears it.
+4. Continue is disabled until a seat is selected.
+5. Continue opens `SeatPovScreen` and starts the overhead-to-first-person camera transition.
+6. When settled, show the POV HUD and draggable information sheet.
+7. Change seat or back reverses the transition and returns to the 2D map while preserving the selected seat unless the user explicitly clears or changes it.
+8. Book displays a mock confirmation using the selected seat and price.
 
-## 3D preview requirements
+## 6. Zone labels
 
-- One auditorium coordinate system.
-- Every seat has a stable ID, row, number, world position, and viewing/camera position.
-- Camera position should be derived from the selected seat's position plus an eye-height offset.
-- Camera target should point toward the screen center or a seat-specific viewing target.
-- Camera transitions should interpolate position and orientation smoothly.
-- Switching seats should update the view without loading an unrelated screen image.
+- Rows A–C: `UP CLOSE`
+- Rows D–G: `SWEET SPOT`
+- Rows H–I: `FULL PICTURE`
 
-## Visual direction
+## 7. Design principles
 
-Use the uploaded reel as the visual and motion reference. Match its overall layout, visual hierarchy, seat selection behavior, and transition feel as closely as practical. Do not copy third-party logos or branding. If an exact detail cannot be reproduced, preserve the interaction and visual intent.
-
-## Non-functional requirements
-
-- Smooth scrolling and transitions.
-- Avoid rebuilding the entire 3D scene for every small UI state change.
-- Handle model loading and rendering errors gracefully.
-- Keep the 2D seat map usable if the 3D asset fails to load.
-- Use responsive sizing rather than fixed device-specific coordinates.
-- Support accessibility labels for interactive seats and controls.
-
-## Out of scope
-
-Authentication, user profiles, backend, live showtimes, live seat inventory, seat locking, payments, real ticket generation, and production booking APIs.
+- Deep near-black background, restrained borders, high contrast.
+- Mint green is reserved for selected seat, selected-seat highlight, status dot and primary accent actions.
+- The 3D auditorium uses crimson seats, with only the selected seat rendered mint green.
+- Do not add extra navigation bars, headers, or decorative elements absent from the reference.
+- UI should remain responsive across supported phone sizes and safe areas.

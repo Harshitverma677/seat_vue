@@ -4,7 +4,8 @@ import '../../../data/mock_auditoriums.dart';
 import '../../../models/seat.dart';
 import '../state/seat_selection_controller.dart';
 
-/// 9-Row Auditorium Seat Grid with 3-7-3 column arrangement matching reference video.
+/// 9-Row Auditorium Seat Grid with 3-8-3 column arrangement (14 seats total per row).
+/// Designed according to 05_STEP_03_SEAT_SELECTION.md and 14_SEAT_METRICS_AND_GEOMETRY.md.
 class SeatGrid extends StatelessWidget {
   final SeatSelectionController controller;
   final ValueChanged<String>? onSeatSelected;
@@ -59,17 +60,17 @@ class SeatGrid extends StatelessWidget {
           // Left Bank (Columns 1, 2, 3)
           ..._buildSeatColumns(rowLabel, [1, 2, 3]),
 
-          // Left Aisle
-          const SizedBox(width: 14),
+          // Left Aisle (Physical gap after seat 3)
+          const SizedBox(width: 15),
 
-          // Center Bank (Columns 4, 5, 6, 7, 8, 9, 10)
-          ..._buildSeatColumns(rowLabel, [4, 5, 6, 7, 8, 9, 10]),
+          // Center Bank (Columns 4, 5, 6, 7, 8, 9, 10, 11)
+          ..._buildSeatColumns(rowLabel, [4, 5, 6, 7, 8, 9, 10, 11]),
 
-          // Right Aisle
-          const SizedBox(width: 14),
+          // Right Aisle (Physical gap after seat 11)
+          const SizedBox(width: 15),
 
-          // Right Bank (Columns 11, 12, 13)
-          ..._buildSeatColumns(rowLabel, [11, 12, 13]),
+          // Right Bank (Columns 12, 13, 14)
+          ..._buildSeatColumns(rowLabel, [12, 13, 14]),
         ],
       ),
     );
@@ -80,17 +81,12 @@ class SeatGrid extends StatelessWidget {
       final seatId = '$rowLabel$col';
       final seat = controller.getSeatById(seatId);
 
-      // If it's an aisle gap in Recliner rows (H or I), render an empty placeholder
-      if (seat == null && MockAuditoriums.aisleGaps.contains(seatId)) {
-        return const SizedBox(width: 22, height: 20);
-      }
-
       if (seat == null) {
-        return const SizedBox(width: 22, height: 20);
+        return const SizedBox(width: 20, height: 18);
       }
 
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2.2),
+        padding: const EdgeInsets.symmetric(horizontal: 2.0),
         child: _buildSeatCell(seat),
       );
     }).toList();
@@ -106,39 +102,41 @@ class SeatGrid extends StatelessWidget {
     List<BoxShadow>? shadows;
 
     if (isSelected) {
-      backgroundColor = AppColors.mintGreen;
-      border = Border.all(color: const Color(0xFF8FF5C2), width: 1.2);
+      backgroundColor = AppColors.accent; // #4ADE80
+      border = Border.all(color: const Color(0xFF86EFAC), width: 1.2);
       shadows = [
         BoxShadow(
-          color: AppColors.mintGreen.withValues(alpha: 0.55),
+          color: AppColors.accent.withValues(alpha: 0.5),
           blurRadius: 8,
           spreadRadius: 1,
         ),
       ];
     } else if (isUnavailable) {
-      backgroundColor = Colors.transparent;
-      border = Border.all(color: const Color(0xFF333742), width: 1.4);
+      backgroundColor = AppColors.takenFill; // #111114
+      border = Border.all(color: AppColors.surfaceBorder, width: 1.2);
     } else if (isRecliner) {
-      backgroundColor = AppColors.seatRecliner;
+      backgroundColor = AppColors.reclinerFill; // #2A1C1E
+      border = Border.all(color: AppColors.seatReclinerBorder, width: 1.0);
     } else {
-      backgroundColor = AppColors.seatAvailable;
+      backgroundColor = AppColors.availableFill; // #1E1E24
+      border = Border.all(color: AppColors.availableBorder, width: 1.0);
     }
 
     return GestureDetector(
       onTap: isUnavailable
           ? null
           : () {
-              // Select single seat for 1-to-1 preview as shown in video
+              // Single-seat toggle
               controller.toggleSeat(seat.id);
               onSeatSelected?.call(seat.id);
             },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        width: 18,
+        width: isRecliner ? 20 : 18,
         height: 18,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(4.5),
+          borderRadius: BorderRadius.circular(4.0),
           border: border,
           boxShadow: shadows,
         ),
@@ -147,7 +145,7 @@ class SeatGrid extends StatelessWidget {
             ? Text(
                 '${seat.seatNumber}',
                 style: const TextStyle(
-                  color: Colors.black,
+                  color: AppColors.accentText, // #052E16
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
                   height: 1.0,

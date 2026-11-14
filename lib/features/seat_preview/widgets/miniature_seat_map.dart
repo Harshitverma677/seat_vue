@@ -3,9 +3,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../data/mock_auditoriums.dart';
 import '../../../models/seat.dart';
 
-/// Miniature seat map displayed in the top-right of the preview panel.
-/// Shows a mini curved screen and a dot matrix representing the 9×13 auditorium,
-/// with the active preview seat highlighted in glowing mint green.
+/// Miniature seat map displayed in the top-right of the POV information sheet.
+/// Renders a mini curved screen arc and all 9 × 14 = 126 seat dots with 3-8-3 aisle gaps.
+/// The selected seat is highlighted in glowing mint green (#4ADE80).
 class MiniatureSeatMap extends StatelessWidget {
   final Seat activeSeat;
 
@@ -17,13 +17,13 @@ class MiniatureSeatMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const int totalRows = 9;
-    const int totalCols = 13;
+    const int totalCols = 14;
 
     return Container(
-      width: 82,
+      width: 86,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF14161C),
+        color: AppColors.checkoutSurface, // #121215
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -31,12 +31,12 @@ class MiniatureSeatMap extends StatelessWidget {
         children: [
           // Mini Curved Screen Arc
           CustomPaint(
-            size: const Size(64, 6),
+            size: const Size(68, 6),
             painter: _MiniScreenArcPainter(),
           ),
           const SizedBox(height: 5),
 
-          // Mini Dot Grid
+          // Mini Dot Grid (9 rows x 14 columns)
           Column(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(totalRows, (r) {
@@ -49,32 +49,31 @@ class MiniatureSeatMap extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(totalCols, (c) {
                     final colNumber = c + 1;
-                    final seatId = '$rowLabel$colNumber';
-                    final isAisleGap = MockAuditoriums.aisleGaps.contains(seatId);
-
-                    if (isAisleGap) {
-                      return const SizedBox(width: 3.5, height: 3.5);
-                    }
-
                     final isSelected = isCurrentRow && activeSeat.seatNumber == colNumber;
 
-                    return Container(
-                      width: 3.5,
-                      height: 3.5,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected
-                            ? AppColors.mintGreen
-                            : const Color(0xFF333742),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.mintGreen.withValues(alpha: 0.8),
-                                  blurRadius: 4,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                            : null,
+                    // Aisle gap margin after col 3 and col 11
+                    final isAisleRight = c == 2 || c == 10;
+
+                    return Padding(
+                      padding: EdgeInsets.only(right: isAisleRight ? 3.0 : 0.0),
+                      child: Container(
+                        width: 3.2,
+                        height: 3.2,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? AppColors.accent // #4ADE80
+                              : const Color(0xFF2C2F3A),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.accent.withValues(alpha: 0.9),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
+                        ),
                       ),
                     );
                   }),
@@ -96,7 +95,7 @@ class _MiniScreenArcPainter extends CustomPainter {
       ..quadraticBezierTo(size.width * 0.5, 0, size.width, size.height);
 
     final paint = Paint()
-      ..color = const Color(0xFF8E929E).withValues(alpha: 0.8)
+      ..color = const Color(0xFF8E929E).withValues(alpha: 0.75)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2
       ..strokeCap = StrokeCap.round;

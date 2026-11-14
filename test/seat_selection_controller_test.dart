@@ -7,7 +7,7 @@ void main() {
   group('SeatSelectionController Tests', () {
     test('Initializes with full auditorium layout', () {
       final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
-      expect(controller.seats.length, equals(109)); // 9 rows (A-I), 13 cols
+      expect(controller.seats.length, equals(126)); // 9 rows (A-I), 14 cols
       expect(controller.selectedSeatIds, isEmpty);
       expect(controller.totalPrice, equals(0.0));
     });
@@ -56,8 +56,14 @@ void main() {
       final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
 
       controller.toggleSeat('B1');
+      expect(controller.selectedSeatIds.length, equals(1));
+      expect(controller.activePreviewSeatId, equals('B1'));
+
+      // Tapping B2 moves the single-seat selection to B2
       controller.toggleSeat('B2');
-      expect(controller.selectedSeatIds.length, equals(2));
+      expect(controller.selectedSeatIds.length, equals(1));
+      expect(controller.activePreviewSeatId, equals('B2'));
+      expect(controller.isSelected('B2'), isTrue);
 
       controller.setActivePreviewSeat('B1');
       expect(controller.activePreviewSeatId, equals('B1'));

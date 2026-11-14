@@ -3,7 +3,7 @@ import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 import '../state/seat_selection_controller.dart';
 
-/// Floating bottom booking panel matching reference recording.
+/// Floating bottom booking checkout bar matching 06_STEP_04_SEAT_MAP_AND_CHECKOUT.md.
 class SeatSummaryBar extends StatelessWidget {
   final SeatSelectionController controller;
   final VoidCallback onContinue;
@@ -34,9 +34,9 @@ class SeatSummaryBar extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF14161B),
+            color: AppColors.checkoutSurface, // #121215
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF242732), width: 1.0),
+            border: Border.all(color: AppColors.surfaceBorder, width: 1.0), // #26262C
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.6),
@@ -64,8 +64,8 @@ class SeatSummaryBar extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       priceLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: hasSelection ? Colors.white : const Color(0xFF6E7280),
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.5,
@@ -79,10 +79,10 @@ class SeatSummaryBar extends StatelessWidget {
               ElevatedButton(
                 onPressed: hasSelection ? onContinue : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.mintGreen,
-                  disabledBackgroundColor: const Color(0xFF283630),
-                  foregroundColor: Colors.black,
-                  disabledForegroundColor: const Color(0xFF5A6660),
+                  backgroundColor: AppColors.accent, // #4ADE80
+                  disabledBackgroundColor: const Color(0xFF1E2822),
+                  foregroundColor: AppColors.accentText, // #052E16
+                  disabledForegroundColor: const Color(0xFF43524A),
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   elevation: 0,
                   shape: RoundedRectangleBorder(

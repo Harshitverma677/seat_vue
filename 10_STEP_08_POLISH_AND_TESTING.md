@@ -1,47 +1,72 @@
-# Step 8 — UI Polish, Responsiveness, and Testing
+# Step 8: Polish, Testing and Acceptance
 
-## Objective
+## Automated checks
 
-Make the UI-only prototype reliable, polished, and smooth on Android and iOS.
+Run:
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
 
-## Read first
+Add unit tests for seat layout, aisle coordinates, pricing, availability, selection, zone classification and metrics.
 
-- `README.md`
-- `01_PRODUCT_SPEC.md`
-- `02_ARCHITECTURE_AND_RULES.md`
-- All relevant step documents for the screens being tested.
+Add widget tests for:
+- Default showtime.
+- Seat map row/seat count.
+- Selected/unselected/taken seat behavior.
+- Continue disabled/enabled.
+- Checkout label and price.
+- POV badge, sheet labels and actions.
+- Change-seat state preservation.
+- Mock booking confirmation.
 
-## Functions performed in this step
+## Platform checks
 
-1. Compare screen layouts and transitions against the uploaded reel.
-2. Tune animation duration, easing, and camera movement.
-3. Check seat spacing and touch targets on small screens.
-4. Check scrolling, safe areas, and orientation behavior.
-5. Add loading and error states for 3D model loading.
-6. Profile frame rate and memory use.
-7. Test seat selection, preview, seat switching, and return navigation.
-8. Remove debug UI and unused code.
-9. Document known limitations.
+Build and manually verify Android and iOS:
+- App launches and 2D screen lays out correctly.
+- 3D scene loads and reports errors cleanly.
+- Camera transition runs without a blank/frozen viewport.
+- Back/Change seat returns to map.
+- Drag-to-look works without fighting the bottom-sheet drag.
+- App background/resume and navigation do not leak renderer resources.
 
-## Test scenarios
+## Visual acceptance checklist
 
-- Open each movie from the home screen.
-- Choose different showtimes.
-- Select one seat and open its preview.
-- Preview a front-row, center, side, and back-row seat.
-- Switch between seats while in preview.
-- Return to the map and verify selection is preserved.
-- Try tapping unavailable seats.
-- Rapidly tap preview/return controls.
-- Test with the 3D model unavailable or failing to load.
-- Test on a small and a large screen.
+### Seat selection
+- [ ] Dark palette matches spec.
+- [ ] Meridian header and hall/date subtitle.
+- [ ] Three showtime pills; `16:45 IMAX` selected initially.
+- [ ] Curved screen arc and glow.
+- [ ] 9 rows × 14 seats.
+- [ ] Aisles after seat 3 and seat 11.
+- [ ] Rows A–H standard; row I recliner.
+- [ ] Seat selection/deselection and taken-seat behavior.
+- [ ] Legend and sticky checkout bar.
 
-## Completion checklist
+### 3D experience
+- [ ] Actual 3D meshes, not 2D polygon approximations.
+- [ ] Tiered auditorium, aisle rails, floor, walls and ceiling.
+- [ ] Curved screen with authorized desert image.
+- [ ] Crimson seats; only selected seat mint.
+- [ ] Row-I recliner/footrest geometry.
+- [ ] Overhead-to-POV transition around 1200 ms.
+- [ ] Seat-specific camera poses.
+- [ ] Reverse transition and constrained look-around.
 
-- [ ] Core user journey works end to end with mock data.
-- [ ] UI is visually consistent.
-- [ ] Seat-to-view mapping is believable and consistent.
-- [ ] Transitions are smooth on target devices.
-- [ ] No crashes from repeated navigation or taps.
-- [ ] 3D assets and renderer resources are cleaned up.
-- [ ] No authentication, payment, backend, or real booking functionality has slipped into scope.
+### POV interface
+- [ ] Back button and dynamic `View from ...` badge.
+- [ ] Draggable sheet and handle.
+- [ ] Correct zone tag, seat title and type/price.
+- [ ] Mini-map with 9 × 14 dots and active highlight.
+- [ ] Three live metric cards.
+- [ ] Change seat and mock Book action.
+
+### Quality
+- [ ] No overflow on target phone sizes.
+- [ ] No new analyzer warnings.
+- [ ] Tests pass or pre-existing failures are documented.
+- [ ] Renderer performance checked on real devices.
+- [ ] No payment/backend/live booking behavior added.
+
+## Final report
+
+List changed files, architecture choices, packages, tests run and results, supported platforms, known limitations and any acceptance items not completed. Never report unrun tests as passing.
