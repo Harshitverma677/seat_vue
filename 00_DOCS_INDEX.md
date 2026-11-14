@@ -22,10 +22,15 @@ This file is the entry point for developers and coding agents. Before implementi
 | 7 | Connect seats to camera positions and animate transitions | `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, then `07_STEP_05_SEAT_MAP.md` and `08_STEP_06_3D_AUDITORIUM.md` |
 | 8 | Polish and test the prototype | `10_STEP_08_POLISH_AND_TESTING.md`, then all relevant step documents |
 | Any step | Give an AI coding agent project-wide instructions | `AGENT_INSTRUCTIONS.md` |
+| 3D upgrade | Replace 2D perspective drawing with a true 3D scene | `12_TRUE_3D_RENDERER_MIGRATION.md`, then `08_STEP_06_3D_AUDITORIUM.md`, `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, and `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md` |
 
 ## New 3D visual adjustment
 
 Before changing the 3D preview to match the user's screenshots, read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. It takes priority over earlier generic 3D-view wording where they conflict. For 3D work, read it together with `08_STEP_06_3D_AUDITORIUM.md` and `09_STEP_07_CAMERA_AND_TRANSITIONS.md`.
+
+## True 3D renderer migration
+
+For the upgrade from the current CustomPainter-based perspective rendering to a genuine 3D cinema environment, read `12_TRUE_3D_RENDERER_MIGRATION.md` with `08_STEP_06_3D_AUDITORIUM.md`, `09_STEP_07_CAMERA_AND_TRANSITIONS.md`, and `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. The migration document takes priority over any earlier wording that treats CustomPainter as the final 3D renderer.
 
 ## Required order
 

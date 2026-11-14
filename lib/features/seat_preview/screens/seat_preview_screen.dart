@@ -13,6 +13,7 @@ import '../../seat_selection/state/seat_selection_controller.dart';
 import '../models/auditorium_camera_state.dart';
 import '../services/auditorium_3d_service.dart';
 import '../widgets/cinema_3d_viewport.dart';
+import 'cinema_3d_poc_screen.dart';
 
 /// Screen hosting the 3D cinema auditorium preview with smooth camera transitions.
 class SeatPreviewScreen extends StatefulWidget {
@@ -291,6 +292,27 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             shape: const RoundedRectangleBorder(borderRadius: AppSpacing.roundedSm),
                           ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        // Launch True 3D WebGL POC
+                        IconButton(
+                          tooltip: 'True 3D (POC)',
+                          icon: const Icon(Icons.view_in_ar_rounded, size: 20, color: AppColors.primary),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(alpha: 0.6),
+                            padding: const EdgeInsets.all(6),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => Cinema3DPocScreen(
+                                  movie: widget.movie,
+                                  showtime: widget.showtime,
+                                  seatController: widget.seatController,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

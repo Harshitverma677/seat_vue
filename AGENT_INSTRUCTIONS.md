@@ -1,6 +1,6 @@
 # Instructions for AI Coding Agents
 
-You are working on a Flutter UI-only movie-booking prototype. Read `00_DOCS_INDEX.md` first, then read the documents listed for the current step before editing code. For all 3D preview work, also read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`.
+You are working on Seat View, a Flutter UI-only movie-booking prototype. Read `00_DOCS_INDEX.md` first, then read the documents listed for the current step before editing code. For all 3D preview work, also read `11_3D_REALISM_AND_VIEWPORT_ADJUSTMENTS.md`. When upgrading the current CustomPainter renderer to actual 3D meshes, read `12_TRUE_3D_RENDERER_MIGRATION.md` before editing.
 
 ## Product goal
 
@@ -12,7 +12,7 @@ Do implement:
 - Flutter screens and widgets.
 - Local mock movie, cinema, showtime, and seat data.
 - Interactive 2D seat selection.
-- Realistic first-person 3D auditorium rendering at seated human eye height, with padded foreground seat backs, neighboring seats, and a screen showing a bundled static placeholder image.
+- A true 3D first-person auditorium renderer using actual meshes, perspective camera, depth/occlusion, realistic materials, lighting and shadows. The target view has padded foreground seat backs, neighboring seats, and a screen showing a bundled static placeholder image.
 - Seat-to-camera mapping.
 - Smooth camera transitions and preview navigation.
 
@@ -42,7 +42,7 @@ Do not implement in this phase:
 - Keep seat selection state in one source of truth.
 - Keep 3D scene lifecycle and camera control outside ordinary UI widgets.
 - Do not recreate the 3D renderer on every Flutter rebuild.
-- Verify the chosen 3D renderer on the project's Flutter version and target devices before building the full scene.
+- Verify the chosen true 3D renderer on the project's Flutter version and target Android/iOS devices before building the full scene. Do not treat CustomPainter polygons as actual 3D meshes.
 - Document model asset sources and licenses.
 - Avoid magic numbers and duplicated styles.
 
