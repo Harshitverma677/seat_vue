@@ -164,3 +164,4 @@ class BookingConfirmationDialog extends StatelessWidget {
     );
   }
 }
+

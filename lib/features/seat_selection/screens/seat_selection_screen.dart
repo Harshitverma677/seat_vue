@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../models/cinema.dart';
 import '../../../models/movie.dart';
 import '../../../models/showtime.dart';
 import '../../seat_preview/screens/seat_preview_screen.dart';
@@ -13,11 +15,13 @@ import '../widgets/seat_summary_bar.dart';
 class SeatSelectionScreen extends StatefulWidget {
   final Movie movie;
   final Showtime showtime;
+  final Cinema? cinema;
 
   const SeatSelectionScreen({
     super.key,
     required this.movie,
     required this.showtime,
+    this.cinema,
   });
 
   @override
@@ -26,14 +30,15 @@ class SeatSelectionScreen extends StatefulWidget {
 
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   late final SeatSelectionController _controller;
-  int _selectedShowtimeIndex = 1; // Default to 16:45 IMAX (specified in product spec)
-
-  // Showtime pills in the required order
-  final List<String> _showtimes = ['17:30 2D', '16:45 IMAX', '22:15 2D'];
 
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
     _controller = SeatSelectionController(
       basePrice: widget.showtime.basePrice,
       reclinerPrice: 16.00,
@@ -73,7 +78,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         bottom: false,
         child: Column(
           children: [
-            // 1. Top Header (Meridian / Hall 3 · Fri 14 Nov)
+            // 1. Top Header (Cinema / Movie · Hall · Date · Time)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
@@ -90,21 +95,25 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'Meridian',
-                          style: TextStyle(
+                        Text(
+                          widget.cinema?.name ?? 'Meridian',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 17,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Hall 3 · Fri 14 Nov',
-                          style: TextStyle(
+                          '${widget.movie.title} · ${widget.showtime.hallName} · ${widget.showtime.dateLabel}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -123,46 +132,8 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
               ),
             ),
 
-            // 2. Rounded Showtime Selection Pill Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-              child: Container(
-                padding: const EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
-                  color: AppColors.surface, // #16161A
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.surfaceBorder, width: 1.0), // #26262C
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(_showtimes.length, (index) {
-                    final isSelected = index == _selectedShowtimeIndex;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedShowtimeIndex = index),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.activePill : Colors.transparent, // #FFFFFF
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          _showtimes[index],
-                          style: TextStyle(
-                            color: isSelected ? AppColors.activePillText : AppColors.textSecondary,
-                            fontSize: 12.5,
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-
-            // 3. Curved Cinema Screen Indicator
-            const SizedBox(height: 6),
+            // 2. Curved Cinema Screen Indicator
+            const SizedBox(height: 12),
             const ScreenCurveIndicator(),
             const SizedBox(height: 12),
 

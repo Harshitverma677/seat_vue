@@ -12,7 +12,7 @@ class SeatVueApp extends StatelessWidget {
       title: 'SeatVue',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      initialRoute: AppRoutes.home,
+      initialRoute: AppRoutes.dashboard,
       onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }

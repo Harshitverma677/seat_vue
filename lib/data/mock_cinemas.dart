@@ -1,0 +1,133 @@
+import '../models/cinema.dart';
+
+/// Mock cinema halls catalog for Delhi and surrounding NCR.
+class MockCinemas {
+  MockCinemas._();
+
+  static const List<Cinema> delhiCinemas = [
+    Cinema(
+      id: 'c1',
+      name: 'PVR ICON: Select CITYWALK',
+      locality: 'Saket, South Delhi',
+      city: 'Delhi',
+      formats: ['IMAX Laser', '4DX', 'Dolby Atmos', '2D'],
+      address: 'A-3, District Centre, Saket, New Delhi, Delhi 110017',
+      rating: 4.8,
+      distanceKm: 2.4,
+    ),
+    Cinema(
+      id: 'c2',
+      name: "PVR Director's Cut: Ambience",
+      locality: 'Vasant Kunj, South West Delhi',
+      city: 'Delhi',
+      formats: ['Director\'s Cut', 'Dolby Atmos', '3D', '2D'],
+      address: 'Ambience Mall, Nelson Mandela Marg, Vasant Kunj, New Delhi, Delhi 110070',
+      rating: 4.9,
+      distanceKm: 5.1,
+    ),
+    Cinema(
+      id: 'c3',
+      name: 'INOX Megaplex: Nehru Place',
+      locality: 'Nehru Place, South Delhi',
+      city: 'Delhi',
+      formats: ['IMAX', 'Insignia', 'MX4D', '2D'],
+      address: 'Eros Corporate Tower, Nehru Place, New Delhi, Delhi 110019',
+      rating: 4.7,
+      distanceKm: 3.8,
+    ),
+    Cinema(
+      id: 'c4',
+      name: 'Cinépolis: DLF Avenue',
+      locality: 'Saket, South Delhi',
+      city: 'Delhi',
+      formats: ['Macro XE', '4DX', 'VIP', '2D'],
+      address: 'DLF Avenue, A4, Press Enclave Marg, Saket, New Delhi, Delhi 110017',
+      rating: 4.6,
+      distanceKm: 2.6,
+    ),
+    Cinema(
+      id: 'c5',
+      name: 'PVR Plaza: Connaught Place',
+      locality: 'Connaught Place, Central Delhi',
+      city: 'Delhi',
+      formats: ['Heritage P\u2022XL', 'Dolby Atmos', '2D'],
+      address: 'H-Block, Connaught Circus, CP, New Delhi, Delhi 110001',
+      rating: 4.7,
+      distanceKm: 7.2,
+    ),
+    Cinema(
+      id: 'c6',
+      name: 'Cinépolis: Pacific Mall',
+      locality: 'Tagore Garden, West Delhi',
+      city: 'Delhi',
+      formats: ['4DX', 'Dolby Atmos', '3D', '2D'],
+      address: 'Pacific Mall, Subhash Nagar Metro, Tagore Garden, New Delhi, Delhi 110027',
+      rating: 4.5,
+      distanceKm: 11.5,
+    ),
+    Cinema(
+      id: 'c7',
+      name: 'PVR: Vegas Mall',
+      locality: 'Sector 14, Dwarka',
+      city: 'Delhi',
+      formats: ['IMAX Laser', 'LUXE', '4DX', 'Playhouse'],
+      address: 'Vegas Mall, Plot No 6, Sector 14, Dwarka, New Delhi, Delhi 110078',
+      rating: 4.8,
+      distanceKm: 14.0,
+    ),
+    Cinema(
+      id: 'c8',
+      name: 'INOX: Eros One',
+      locality: 'Jangpura Extension, South Delhi',
+      city: 'Delhi',
+      formats: ['Insignia', 'Dolby 7.1', '2D'],
+      address: 'Eros Cinema Building, Jangpura Extension, New Delhi, Delhi 110014',
+      rating: 4.4,
+      distanceKm: 4.5,
+    ),
+    Cinema(
+      id: 'c9',
+      name: 'PVR: Priya Cinema',
+      locality: 'Vasant Vihar, South Delhi',
+      city: 'Delhi',
+      formats: ['P\u2022XL Laser', 'Dolby Atmos', '2D'],
+      address: 'Basant Lok Community Centre, Vasant Vihar, New Delhi, Delhi 110057',
+      rating: 4.7,
+      distanceKm: 6.0,
+    ),
+    Cinema(
+      id: 'c10',
+      name: 'Wave Cinemas: Raja Garden',
+      locality: 'Raja Garden, West Delhi',
+      city: 'Delhi',
+      formats: ['Platinum Club', '4K Laser', '2D'],
+      address: 'Parade Road, Raja Garden, New Delhi, Delhi 110015',
+      rating: 4.3,
+      distanceKm: 10.2,
+    ),
+    Cinema(
+      id: 'c11',
+      name: 'Delite Cinema: Daryaganj',
+      locality: 'Asaf Ali Road, Old Delhi',
+      city: 'Delhi',
+      formats: ['Delite Diamond', 'Dolby Atmos', '2D'],
+      address: 'Gate 4, Asaf Ali Rd, near Delhi Gate, Daryaganj, New Delhi, Delhi 110002',
+      rating: 4.5,
+      distanceKm: 8.4,
+    ),
+    Cinema(
+      id: 'c12',
+      name: 'MovieMax: Pacific NSP',
+      locality: 'Netaji Subhash Place, Pitampura',
+      city: 'Delhi',
+      formats: ['Dolby Atmos', '3D', '2D'],
+      address: 'Pacific Mall NSP, Pitampura, New Delhi, Delhi 110034',
+      rating: 4.4,
+      distanceKm: 12.8,
+    ),
+  ];
+
+  static List<Cinema> getCinemasForCity(String city) {
+    return delhiCinemas.where((c) => c.city.toLowerCase() == city.toLowerCase()).toList();
+  }
+}

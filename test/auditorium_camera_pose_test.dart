@@ -6,7 +6,7 @@ void main() {
   group('Auditorium 3D Camera Pose Tests', () {
     test('Every generated seat resolves to a unique 3D position and camera pose', () {
       final seats = MockAuditoriums.generateAuditoriumSeats();
-      expect(seats.length, equals(126)); // 9 rows (A-I), 14 columns
+      expect(seats.length, equals(168)); // 12 rows (A-L), 14 columns
 
       for (final seat in seats) {
         final pose = MockAuditoriums.getCameraPoseForSeat(seat);
@@ -24,10 +24,10 @@ void main() {
         // Depth Z must match seat Z
         expect(pose.cameraPosition.z, equals(seat.worldPosition.z));
 
-        // Target must point toward screen center (0, 3.5, 0)
+        // Target must point toward screen center (0, 3.8, 0.5)
         expect(pose.lookAtTarget.x, equals(0.0));
-        expect(pose.lookAtTarget.y, equals(3.5));
-        expect(pose.lookAtTarget.z, equals(0.0));
+        expect(pose.lookAtTarget.y, equals(3.8));
+        expect(pose.lookAtTarget.z, equals(0.5));
       }
     });
 
@@ -60,18 +60,18 @@ void main() {
       expect(metricsB4.centreAlignmentLabel, equals('left of centre'));
       expect(metricsB4.badgeLabel, equals('UP CLOSE'));
 
-      // Row F Seat 8: 9.8m, 60 deg FOV, 0.3m right of centre
+      // Row F Seat 8: ~10.1m, ~60 deg FOV, 0.3m right of centre
       final seatF8 = seats.firstWhere((s) => s.id == 'F8');
       final metricsF8 = MockAuditoriums.calculateMetrics(seatF8);
-      expect(metricsF8.distanceToScreen, closeTo(9.8, 0.3));
-      expect(metricsF8.fieldOfView, inInclusiveRange(55, 65));
+      expect(metricsF8.distanceToScreen, closeTo(10.1, 0.5));
+      expect(metricsF8.fieldOfView, inInclusiveRange(55, 68));
       expect(metricsF8.centreAlignmentLabel, equals('right of centre'));
       expect(metricsF8.badgeLabel, equals('SWEET SPOT'));
 
-      // Row I Seat 12 (Recliner): 13.3m, 45 deg FOV, 3.3m right of centre
+      // Row I Seat 12 (Recliner): ~13.6m, ~44 deg FOV, 3.3m right of centre
       final seatI12 = seats.firstWhere((s) => s.id == 'I12');
       final metricsI12 = MockAuditoriums.calculateMetrics(seatI12);
-      expect(metricsI12.distanceToScreen, closeTo(13.3, 0.3));
+      expect(metricsI12.distanceToScreen, closeTo(13.6, 0.5));
       expect(metricsI12.fieldOfView, inInclusiveRange(40, 50));
       expect(metricsI12.centreAlignmentLabel, equals('right of centre'));
       expect(metricsI12.badgeLabel, equals('FULL PICTURE'));

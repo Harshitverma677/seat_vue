@@ -9,14 +9,16 @@ class MockAuditoriums {
   MockAuditoriums._();
 
   static const double eyeHeightOffset = SeatGeometryService.eyeHeightOffset;
-  static const Position3D defaultScreenTarget = Position3D(0.0, 3.5, 0.0);
+  static const Position3D defaultScreenTarget = Position3D(0.0, 3.8, 0.5);
   static const Position3D overviewCameraPosition = Position3D(0.0, 9.5, 18.5);
-  static const Position3D overviewLookAtTarget = Position3D(0.0, 3.2, 0.0);
+  static const Position3D overviewLookAtTarget = Position3D(0.0, 3.8, 0.5);
 
-  static const List<String> rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
+  // 12 rows (A to L) x 14 seats = 168 seats
+  static const List<String> rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
   static const int seatsPerRow = 14;
+  static const int standardRowCount = 8; // Rows A through H are Standard (€12.50)
 
-  // Taken mock seats matching the reference video (never including test seats B4, F8, I12)
+  // Taken mock seats matching the reference video (only in front rows A-E; all back rows F-L are open)
   static const Set<String> unavailableSeatIds = {
     'A2',
     'A5',
@@ -33,13 +35,6 @@ class MockAuditoriums {
     'E3',
     'E4',
     'E12',
-    'F3',
-    'F7',
-    'G3',
-    'G5',
-    'G9',
-    'G13',
-    'H7',
   };
 
   /// Generates the complete 126-seat auditorium layout (9 rows x 14 columns).
@@ -51,12 +46,12 @@ class MockAuditoriums {
 
     for (int r = 0; r < rowLabels.length; r++) {
       final row = rowLabels[r];
-      final isRecliner = row == 'I';
+      final isRecliner = r >= standardRowCount;
       final price = isRecliner ? reclinerPrice : standardPrice;
 
       // Longitudinal Z and elevation Y
       final double z = SeatGeometryService.getZDistanceForRow(r);
-      final double y = 0.5 + (r * 0.38);
+      final double y = 0.40 + (r * 0.35);
 
       for (int s = 1; s <= seatsPerRow; s++) {
         final id = '$row$s';

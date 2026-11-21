@@ -8,16 +8,18 @@ import '../../../models/seat.dart';
 /// The selected seat is highlighted in glowing mint green (#4ADE80).
 class MiniatureSeatMap extends StatelessWidget {
   final Seat activeSeat;
+  final ValueChanged<String>? onSeatSelected;
 
   const MiniatureSeatMap({
     super.key,
     required this.activeSeat,
+    this.onSeatSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    const int totalRows = 9;
-    const int totalCols = 14;
+    final int totalRows = MockAuditoriums.rowLabels.length;
+    final int totalCols = MockAuditoriums.seatsPerRow;
 
     return Container(
       width: 86,
@@ -54,25 +56,29 @@ class MiniatureSeatMap extends StatelessWidget {
                     // Aisle gap margin after col 3 and col 11
                     final isAisleRight = c == 2 || c == 10;
 
-                    return Padding(
-                      padding: EdgeInsets.only(right: isAisleRight ? 3.0 : 0.0),
-                      child: Container(
-                        width: 3.2,
-                        height: 3.2,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected
-                              ? AppColors.accent // #4ADE80
-                              : const Color(0xFF2C2F3A),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.accent.withValues(alpha: 0.9),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                  ),
-                                ]
-                              : null,
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => onSeatSelected?.call('$rowLabel$colNumber'),
+                      child: Padding(
+                        padding: EdgeInsets.only(right: isAisleRight ? 3.0 : 0.0),
+                        child: Container(
+                          width: 3.2,
+                          height: 3.2,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected
+                                ? AppColors.accent // #4ADE80
+                                : const Color(0xFF2C2F3A),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.accent.withValues(alpha: 0.9),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ]
+                                : null,
+                          ),
                         ),
                       ),
                     );

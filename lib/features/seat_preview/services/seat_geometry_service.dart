@@ -7,51 +7,50 @@ import '../../../models/seat.dart';
 class SeatGeometryService {
   SeatGeometryService._();
 
-  // Longitudinal configuration
-  static const double firstRowDist = 5.42; // Distance of Row A to screen plane
-  static const double rowSpacing = 0.875; // Distance between standard rows
-  static const double reclinerOffset = 0.88; // Row I recliner longitudinal offset
+  // Longitudinal configuration (in metres)
+  static const double firstRowDist = 5.35; // Distance of Row A to screen plane
+  static const double standardRowPitch = 0.95; // Real-world standard row pitch (0.90–1.10 m)
+  static const double reclinerRowPitch = 1.60; // Real-world recliner row pitch (1.40–1.80 m)
 
   // Screen configuration
-  static const double screenWidth = 12.0;
-  static const double halfScreen = screenWidth / 2.0; // 6.0m
+  static const double screenWidth = 11.60;
+  static const double halfScreen = screenWidth / 2.0; // 5.80m
 
-  // Seated eye height offset above seat base
-  static const double eyeHeightOffset = 1.15;
+  // Seated eye height offset above tier floor (0.46m cushion + 0.74m torso/eye level)
+  static const double eyeHeightOffset = 1.20;
 
   // Lateral X coordinates for columns 1 through 14 (indices 0 to 13).
-  // Accounts for aisle gaps after seat 3 (left aisle) and seat 11 (right aisle).
-  // Calibrated to match:
-  // - B4: lateral offset ~2.2m left (-2.2m)
-  // - F8: lateral offset ~0.3m right (+0.3m)
-  // - I12: lateral offset ~3.3m right (+3.3m)
+  // Accounts for aisle gaps after seat 3 (left aisle: 1.15m) and seat 11 (right aisle: 1.15m).
+  // Calibrated to match real-world cinema dimensions:
+  // - B4: lateral offset ~2.2m left (-2.20m)
+  // - F8: lateral offset ~0.3m right (+0.28m)
+  // - I12: lateral offset ~3.3m right (+3.28m)
   static const List<double> columnXCoordinates = [
-    -3.80, // Col 1 (Block 1)
-    -3.00, // Col 2 (Block 1)
-    -2.20, // Col 3 (Block 1)
-    // --- Left Aisle Gap ---
-    -2.20, // Col 4 (Block 2 - B4 target: -2.2m)
-    -1.70, // Col 5 (Block 2)
-    -1.20, // Col 6 (Block 2)
-    -0.50, // Col 7 (Block 2)
-    0.30,  // Col 8 (Block 2 - F8 target: +0.3m)
-    0.90,  // Col 9 (Block 2)
-    1.50,  // Col 10 (Block 2)
-    2.10,  // Col 11 (Block 2)
-    // --- Right Aisle Gap ---
-    3.30,  // Col 12 (Block 3 - I12 target: +3.3m)
-    4.10,  // Col 13 (Block 3)
-    4.90,  // Col 14 (Block 3)
+    -4.85, // Col 1 (Block 1)
+    -4.30, // Col 2 (Block 1)
+    -3.75, // Col 3 (Block 1)
+    // --- Left Aisle Gap (1.15m) ---
+    -2.20, // Col 4 (Block 2 - B4 target: ~2.2m left)
+    -1.60, // Col 5 (Block 2)
+    -1.00, // Col 6 (Block 2)
+    -0.40, // Col 7 (Block 2)
+    0.28,  // Col 8 (Block 2 - F8 target: ~0.3m right)
+    0.88,  // Col 9 (Block 2)
+    1.48,  // Col 10 (Block 2)
+    2.08,  // Col 11 (Block 2)
+    // --- Right Aisle Gap (1.15m) ---
+    3.28,  // Col 12 (Block 3 - I12 target: ~3.3m right)
+    3.83,  // Col 13 (Block 3)
+    4.38,  // Col 14 (Block 3)
   ];
 
-  /// Computes the longitudinal Z distance to the screen plane for a given row index (0..8).
+  /// Computes the longitudinal Z distance to the screen plane for a given row index.
   static double getZDistanceForRow(int rowIndex) {
-    final baseDist = firstRowDist + (rowIndex * rowSpacing);
-    if (rowIndex == 8) {
-      // Row I is Recliner
-      return baseDist + reclinerOffset;
+    if (rowIndex < 8) {
+      return firstRowDist + (rowIndex * standardRowPitch);
+    } else {
+      return firstRowDist + (7 * standardRowPitch) + ((rowIndex - 7) * reclinerRowPitch);
     }
-    return baseDist;
   }
 
   /// Computes the lateral X coordinate (in meters) for a given seat column index (0..13).
@@ -111,3 +110,4 @@ class SeatGeometryService {
     );
   }
 }
+

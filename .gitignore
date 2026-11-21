@@ -39,6 +39,11 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Local TMDB API credentials (keep out of git)
+lib/core/config/tmdb_credentials.dart
+.env
+.env.*
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

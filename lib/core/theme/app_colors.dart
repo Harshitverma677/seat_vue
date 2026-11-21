@@ -1,42 +1,53 @@
 import 'package:flutter/material.dart';
 
 /// Centralized color palette for the Seat View cinematic design system.
-/// Defined according to 04_STEP_02_THEME_AND_COMPONENTS.md.
+/// Refined with the Dribbble movie booking dark charcoal, blue-grey, and golden yellow reference.
 class AppColors {
   AppColors._();
 
-  // Background and Surfaces
-  static const Color scaffold = Color(0xFF0A0A0C);
-  static const Color background = Color(0xFF0A0A0C);
-  static const Color surface = Color(0xFF16161A);
-  static const Color surfaceElevated = Color(0xFF1B2030);
-  static const Color surfaceHighlight = Color(0xFF262C42);
-  static const Color surfaceBorder = Color(0xFF26262C);
-  static const Color checkoutSurface = Color(0xFF121215);
-  static const Color metricSurface = Color(0xFF1A1A1F);
+  // Dribbble Background and Surfaces
+  static const Color background = Color(0xFF141721); // Dark charcoal blue-grey
+  static const Color scaffold = Color(0xFF141721);
+  static const Color surface = Color(0xFF1F2433); // Dark cards
+  static const Color surfaceElevated = Color(0xFF282F44);
+  static const Color surfaceHighlight = Color(0xFF333B54);
+  static const Color surfaceBorder = Color(0xFF2E374D); // Subtle borders
+  static const Color surfaceBorderLight = Color(0xFF3B4660);
+  static const Color checkoutSurface = Color(0xFF181C28);
+  static const Color metricSurface = Color(0xFF1F2433);
 
-  // Accents
-  static const Color accent = Color(0xFF4ADE80); // Mint green (#4ADE80)
-  static const Color accentText = Color(0xFF052E16);
-  static const Color primary = Color(0xFF4ADE80);
-  static const Color primaryLight = Color(0xFF7DE0AC);
-  static const Color primaryDark = Color(0xFF22C55E);
-  static const Color primaryGlow = Color(0x554ADE80);
+  // Golden / Yellow Primary Accent (Dribbble reference CTA)
+  static const Color primary = Color(0xFFF5B935); // Golden Yellow
+  static const Color primaryLight = Color(0xFFFCD34D);
+  static const Color primaryDark = Color(0xFFD97706);
+  static const Color primaryGlow = Color(0x55F5B935);
+  static const Color gold = Color(0xFFF5B935);
+  static const Color goldLight = Color(0xFFFCD34D);
+  static const Color goldGlow = Color(0x66F5B935);
+
+  // Primary Button Text (Dark charcoal on golden button)
+  static const Color textInverse = Color(0xFF0F172A);
+  static const Color accentText = Color(0xFF0F172A);
+
+  // Accent & legacy compatibility
+  static const Color accent = Color(0xFFF5B935);
   static const Color mintGreen = Color(0xFF4ADE80);
   static const Color mintGreenGlow = Color(0x664ADE80);
 
   // Pill Controls
-  static const Color activePill = Color(0xFFFFFFFF);
-  static const Color activePillText = Color(0xFF0A0A0C);
+  static const Color activePill = Color(0xFFF5B935);
+  static const Color activePillText = Color(0xFF0F172A);
+  static const Color inactivePill = Color(0xFF1F2433);
+  static const Color inactivePillText = Color(0xFF94A3B8);
 
-  // 3D Cinema Seat Material
+  // 3D Cinema Seat Material (PRESERVED)
   static const Color theaterSeat = Color(0xFFB91C1C); // Crimson red (#B91C1C)
   static const Color crimson = Color(0xFFB91C1C);
   static const Color secondary = Color(0xFF6366F1);
   static const Color secondaryLight = Color(0xFF818CF8);
   static const Color success = Color(0xFF4ADE80);
 
-  // Seat States
+  // Seat States (PRESERVED for 2D Grid)
   static const Color availableFill = Color(0xFF1E1E24);
   static const Color availableBorder = Color(0xFF2E2E36);
   static const Color seatAvailable = Color(0xFF1E1E24);
@@ -56,16 +67,15 @@ class AppColors {
   static const Color seatSelectedBorder = Color(0xFF86EFAC);
   static const Color seatSelectedGlow = Color(0x774ADE80);
 
-  // Screen Indicator Glow
+  // Screen Indicator Glow (PRESERVED)
   static const Color screenArc = Color(0xFFE2E8F0);
   static const Color screenGlow = Color(0x33E2E8F0);
 
   // Typography
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFF8E929E);
+  static const Color textPrimary = Color(0xFFF8FAFC); // White
+  static const Color textSecondary = Color(0xFF94A3B8); // Grey
   static const Color textMuted = Color(0xFF64748B);
-  static const Color textInverse = Color(0xFF0A0A0C);
 
   // Badges & Ratings
-  static const Color ratingStar = Color(0xFFFFC107);
+  static const Color ratingStar = Color(0xFFF5B935); // Golden Yellow Star
 }

@@ -31,10 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
   webview_flutter: ^4.14.1
+  http: ^1.2.0
+  http2: ^3.2.0
 
 dev_dependencies:
   flutter_test:
@@ -60,7 +59,7 @@ flutter:
 
   # Asset bundles for 3D engine, webview, and screen images
   assets:
-    - assets/web/
+    - assets/three_js/
     - assets/images/
     - assets/3d/
 

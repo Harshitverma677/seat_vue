@@ -7,7 +7,7 @@ void main() {
   group('SeatSelectionController Tests', () {
     test('Initializes with full auditorium layout', () {
       final controller = SeatSelectionController(basePrice: 12.50, reclinerPrice: 16.00);
-      expect(controller.seats.length, equals(126)); // 9 rows (A-I), 14 cols
+      expect(controller.seats.length, equals(168)); // 12 rows (A-L), 14 cols
       expect(controller.selectedSeatIds, isEmpty);
       expect(controller.totalPrice, equals(0.0));
     });

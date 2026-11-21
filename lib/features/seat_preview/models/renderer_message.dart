@@ -12,12 +12,14 @@ sealed class RendererMessage {
 
 /// Command to move camera to a specific seat/pose.
 class SetCameraPoseCommand extends RendererMessage {
+  final String? seatId;
   final Position3D cameraPosition;
   final Position3D lookAtTarget;
   final double fov;
   final int durationMs;
 
   const SetCameraPoseCommand({
+    this.seatId,
     required this.cameraPosition,
     required this.lookAtTarget,
     this.fov = 60.0,
@@ -27,6 +29,7 @@ class SetCameraPoseCommand extends RendererMessage {
   @override
   Map<String, dynamic> toJson() => {
         'type': type,
+        if (seatId != null) 'seatId': seatId,
         'cameraPosition': cameraPosition.toJson(),
         'lookAtTarget': lookAtTarget.toJson(),
         'fov': fov,

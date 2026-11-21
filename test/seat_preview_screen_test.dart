@@ -5,7 +5,7 @@ import 'package:seat_vue/features/seat_preview/screens/seat_preview_screen.dart'
 import 'package:seat_vue/features/seat_selection/state/seat_selection_controller.dart';
 
 void main() {
-  testWidgets('SeatPreviewScreen renders matching the reference recording', (WidgetTester tester) async {
+  testWidgets('SeatPreviewScreen renders matching the reference recording and toggles landscape fullscreen', (WidgetTester tester) async {
     final movie = MockMovies.sampleMovies.first;
     final showtime = MockMovies.getShowtimesForMovie(movie.id).first;
     final controller = SeatSelectionController(
@@ -40,6 +40,30 @@ void main() {
     expect(find.text('field of view'), findsOneWidget);
 
     // Verify Action Buttons
+    expect(find.text('Change seat'), findsOneWidget);
+    expect(find.textContaining('Book · €12.50'), findsOneWidget);
+
+    // Verify Fullscreen Button in top right corner
+    final fullscreenBtn = find.byIcon(Icons.fullscreen_rounded);
+    expect(fullscreenBtn, findsOneWidget);
+
+    // Tap Fullscreen button to enter landscape fullscreen and hide bottom drawer
+    await tester.tap(fullscreenBtn);
+    await tester.pumpAndSettle();
+
+    // Verify Exit button appears in fullscreen mode
+    expect(find.byIcon(Icons.fullscreen_exit_rounded), findsOneWidget);
+    expect(find.text('Exit Fullscreen'), findsOneWidget);
+
+    // Verify normal portrait HUD is hidden in fullscreen mode
+    expect(find.byIcon(Icons.fullscreen_rounded), findsNothing);
+
+    // Tap Exit Fullscreen to return to normal portrait layout
+    await tester.tap(find.byIcon(Icons.fullscreen_exit_rounded));
+    await tester.pumpAndSettle();
+
+    // Verify normal portrait HUD and Fullscreen button are restored
+    expect(find.byIcon(Icons.fullscreen_rounded), findsOneWidget);
     expect(find.text('Change seat'), findsOneWidget);
     expect(find.textContaining('Book · €12.50'), findsOneWidget);
   });

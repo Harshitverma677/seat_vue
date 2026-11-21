@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_durations.dart';
+import 'package:flutter/services.dart';
 import '../../../core/constants/app_spacing.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/mock_auditoriums.dart';
 import '../../../models/movie.dart';
-import '../../../models/seat_camera_pose.dart';
 import '../../../models/showtime.dart';
 import '../../seat_selection/state/seat_selection_controller.dart';
-import '../models/auditorium_camera_state.dart';
-import '../services/auditorium_3d_service.dart';
 import '../widgets/booking_confirmation_dialog.dart';
-import '../widgets/cinema_3d_viewport.dart';
 import '../widgets/miniature_seat_map.dart';
-import 'cinema_3d_poc_screen.dart';
+import '../widgets/true_3d_cinema_viewport.dart';
 
-/// Screen hosting the 3D cinema auditorium preview matching 13_POV_HUD_AND_BOTTOM_SHEET.md.
+/// Screen hosting the 3D cinema auditorium preview rendered directly with Three.js.
+/// Replaces any Flutter CustomPainter auditorium rendering.
 class SeatPreviewScreen extends StatefulWidget {
   final Movie movie;
   final Showtime showtime;
@@ -31,111 +28,120 @@ class SeatPreviewScreen extends StatefulWidget {
   State<SeatPreviewScreen> createState() => _SeatPreviewScreenState();
 }
 
-class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProviderStateMixin {
-  late final Auditorium3DService _auditoriumService;
-  late AnimationController _cameraAnimController;
-  Animation<double>? _cameraCurve;
-
-  AuditoriumCameraState? _transitionStartState;
-  SeatCameraPose? _transitionTargetPose;
-
-  bool _isReturning = false;
+class _SeatPreviewScreenState extends State<SeatPreviewScreen> with WidgetsBindingObserver {
+  final GlobalKey<True3DCinemaViewportState> _viewportKey = GlobalKey<True3DCinemaViewportState>();
   final DraggableScrollableController _sheetController = DraggableScrollableController();
+  bool _isReturning = false;
+  bool _isFullScreen = false;
+
+  // Stored portrait orientation to restore upon exit
+  static const List<DeviceOrientation> _portraitOrientations = [
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ];
+
+  static const List<DeviceOrientation> _landscapeOrientations = [
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ];
 
   @override
   void initState() {
     super.initState();
-    final targetSeat = widget.seatController.activePreviewSeat ??
-        (widget.seatController.selectedSeats.isNotEmpty
-            ? widget.seatController.selectedSeats.last
-            : widget.seatController.seats.first);
-
-    final targetPose = MockAuditoriums.getCameraPoseForSeat(targetSeat);
-
-    _auditoriumService = Auditorium3DService(initialPose: MockAuditoriums.overviewPose);
-
-    _cameraAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200), // 1200ms per 09_STEP_07_CAMERA_AND_TRANSITIONS.md
-    );
-    _cameraAnimController.addListener(_onCameraAnimationTick);
-
-    // Initial two-stage camera transition: Overhead (0-35%) -> Eye level (35-100%)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animateToPose(targetPose, duration: const Duration(milliseconds: 1200));
-    });
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    _cameraAnimController.removeListener(_onCameraAnimationTick);
-    _cameraAnimController.dispose();
-    _auditoriumService.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    if (_isFullScreen) {
+      SystemChrome.setPreferredOrientations(_portraitOrientations);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     _sheetController.dispose();
     super.dispose();
   }
 
-  void _onCameraAnimationTick() {
-    if (_transitionStartState == null || _transitionTargetPose == null) return;
-
-    final progress = _cameraCurve?.value ?? _cameraAnimController.value;
-
-    // Two-stage interpolation:
-    // Stage 1 (0% - 35%): Hold/fade overhead view
-    // Stage 2 (35% - 100%): Curved path descent to seated eye level
-    final double t;
-    if (progress < 0.35) {
-      t = 0.0;
-    } else {
-      t = ((progress - 0.35) / 0.65).clamp(0.0, 1.0);
-    }
-
-    final interpolated = AuditoriumCameraState.lerp(
-      _transitionStartState!,
-      _transitionTargetPose!,
-      t,
-    );
-
-    _auditoriumService.setInterpolatedState(interpolated);
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Notify Three.js renderer when orientation or layout dimensions change
+    _viewportKey.currentState?.notifyResize();
   }
 
-  void _animateToPose(SeatCameraPose targetPose, {Duration? duration, VoidCallback? onComplete}) {
-    if (_cameraAnimController.isAnimating) {
-      _cameraAnimController.stop();
+  Future<void> _enterFullScreen() async {
+    if (_isFullScreen) return;
+
+    setState(() {
+      _isFullScreen = true;
+    });
+
+    try {
+      // 1. Switch device to landscape orientation on both Android and iOS
+      await SystemChrome.setPreferredOrientations(_landscapeOrientations);
+
+      // 2. Hide system status bar and nav bar for immersive cinematic viewing
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } catch (_) {
+      // Graceful fallback if platform does not support orientation change
     }
 
-    _transitionStartState = _auditoriumService.currentState;
-    _transitionTargetPose = targetPose;
+    // 3. Notify Three.js WebGL renderer
+    _viewportKey.currentState?.setFullscreen(true);
+  }
 
-    _cameraAnimController.duration = duration ?? AppDurations.cameraSwitchSeat;
-    _cameraCurve = CurvedAnimation(
-      parent: _cameraAnimController,
-      curve: Curves.easeInOutCubic,
-    );
+  Future<void> _exitFullScreen() async {
+    if (!_isFullScreen) return;
 
-    _auditoriumService.setAnimating(true);
-    _auditoriumService.setTargetPose(targetPose);
-
-    _cameraAnimController.forward(from: 0.0).then((_) {
-      _auditoriumService.setAnimating(false);
-      onComplete?.call();
+    setState(() {
+      _isFullScreen = false;
     });
+
+    try {
+      // 1. Restore portrait orientation
+      await SystemChrome.setPreferredOrientations(_portraitOrientations);
+
+      // 2. Restore system status/navigation bars
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } catch (_) {
+      // Graceful fallback
+    }
+
+    // 3. Notify Three.js WebGL renderer
+    _viewportKey.currentState?.setFullscreen(false);
+  }
+
+  void _goToAdjacentSeat(int delta) {
+    final seats = widget.seatController.seats;
+    final activeSeat = widget.seatController.activePreviewSeat ??
+        (widget.seatController.selectedSeats.isNotEmpty ? widget.seatController.selectedSeats.last : seats.first);
+    final currentIndex = seats.indexWhere((s) => s.id == activeSeat.id);
+    if (currentIndex == -1) return;
+
+    var nextIndex = currentIndex + delta;
+    while (nextIndex >= 0 && nextIndex < seats.length && seats[nextIndex].isUnavailable) {
+      nextIndex += delta;
+    }
+    if (nextIndex >= 0 && nextIndex < seats.length) {
+      widget.seatController.toggleSeat(seats[nextIndex].id);
+    }
   }
 
   void _handleBack() {
+    if (_isFullScreen) {
+      _exitFullScreen();
+      return;
+    }
     if (_isReturning) return;
     _isReturning = true;
 
-    // Smoothly animate camera back to overhead pose, then pop
-    _animateToPose(
-      MockAuditoriums.overviewPose,
-      duration: const Duration(milliseconds: 800),
-      onComplete: () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-    );
+    // Smoothly animate camera back to overhead overview in Three.js, then pop
+    _viewportKey.currentState?.reverseTransition(durationMs: 800);
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
   }
 
   @override
@@ -148,304 +154,417 @@ class _SeatPreviewScreenState extends State<SeatPreviewScreen> with TickerProvid
       child: Scaffold(
         backgroundColor: AppColors.scaffold, // #0A0A0C
         body: ListenableBuilder(
-          listenable: Listenable.merge([_auditoriumService, widget.seatController]),
+          listenable: widget.seatController,
           builder: (context, _) {
             final activeSeat = widget.seatController.activePreviewSeat ??
                 (widget.seatController.selectedSeats.isNotEmpty
                     ? widget.seatController.selectedSeats.last
                     : widget.seatController.seats.first);
 
+            final targetPose = MockAuditoriums.getCameraPoseForSeat(activeSeat);
             final metrics = MockAuditoriums.calculateMetrics(activeSeat);
 
             return Stack(
               fit: StackFit.expand,
               children: [
-                // 1. Interactive 3D Cinema Viewport with Look-Around Pan
+                // 1. True 3D Cinema Viewport running Three.js WebGL with drag-to-look
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onPanUpdate: (details) {
-                    _auditoriumService.applyLookAround(details.delta.dx, details.delta.dy);
+                    _viewportKey.currentState?.sendLookDelta(details.delta.dx, details.delta.dy);
                   },
-                  child: Cinema3DViewport(
-                    cameraState: _auditoriumService.currentState,
-                    seats: widget.seatController.seats,
-                    activeSeatId: activeSeat.id,
-                    movie: widget.movie,
-                    onSeatTappedIn3D: (seatId) {
-                      widget.seatController.setActivePreviewSeat(seatId);
-                      final seat = widget.seatController.getSeatById(seatId);
-                      if (seat != null) {
-                        _animateToPose(MockAuditoriums.getCameraPoseForSeat(seat));
-                      }
-                    },
+                  onDoubleTap: () {
+                    _viewportKey.currentState?.recenterCamera();
+                  },
+                  child: True3DCinemaViewport(
+                    key: _viewportKey,
+                    cameraPose: targetPose,
                   ),
                 ),
 
-                // 2. Top Floating Header Bar (Back button, "• View from B4", 3D POC)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                      child: Row(
-                        children: [
-                          // Circular Back Button
-                          CircleAvatar(
-                            backgroundColor: AppColors.surface.withValues(alpha: 0.85),
-                            radius: 20,
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
-                              onPressed: _handleBack,
-                            ),
-                          ),
-
-                          // Center Floating Pill: "• View from B4"
-                          Expanded(
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface.withValues(alpha: 0.9),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.accent, // #4ADE80
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'View from ${activeSeat.id}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Right: True 3D WebGL POC shortcut
-                          CircleAvatar(
-                            backgroundColor: AppColors.surface.withValues(alpha: 0.85),
-                            radius: 20,
-                            child: IconButton(
-                              tooltip: 'True 3D (POC)',
-                              icon: const Icon(Icons.view_in_ar_rounded, color: AppColors.accent, size: 18),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => Cinema3DPocScreen(
-                                      movie: widget.movie,
-                                      showtime: widget.showtime,
-                                      seatController: widget.seatController,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // 3. Draggable Information Sheet matching 13_POV_HUD_AND_BOTTOM_SHEET.md
-                DraggableScrollableSheet(
-                  controller: _sheetController,
-                  initialChildSize: 0.38,
-                  minChildSize: 0.24,
-                  maxChildSize: 0.62,
-                  snap: true,
-                  snapSizes: const [0.24, 0.38, 0.62],
-                  builder: (context, scrollController) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.checkoutSurface.withValues(alpha: 0.98), // #121215
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                        border: const Border(
-                          top: BorderSide(color: AppColors.surfaceBorder, width: 1.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.8),
-                            blurRadius: 30,
-                            offset: const Offset(0, -6),
-                          ),
-                        ],
-                      ),
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        physics: const ClampingScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                // 2A. Top Floating Header Bar (visible in portrait mode)
+                if (!_isFullScreen)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Row(
                           children: [
-                            // Drag Handle Pill
-                            Center(
-                              child: Container(
-                                width: 36,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF333744),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
+                            // Circular Back Button
+                            CircleAvatar(
+                              backgroundColor: AppColors.surface.withValues(alpha: 0.85),
+                              radius: 20,
+                              child: IconButton(
+                                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
+                                onPressed: _handleBack,
                               ),
                             ),
-                            const SizedBox(height: 14),
 
-                            // Row 1: Seat Info & 126-Dot Miniature Seat Map
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                            // Center Floating Pill: "< • View from B4 >"
+                            Expanded(
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface.withValues(alpha: 0.9),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                                  ),
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      // Zone Tag (UP CLOSE, SWEET SPOT, FULL PICTURE)
-                                      Text(
-                                        metrics.badgeLabel,
-                                        style: const TextStyle(
-                                          color: AppColors.accent, // #4ADE80
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: 1.5,
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => _goToAdjacentSeat(-1),
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                          child: Icon(Icons.chevron_left_rounded, color: Colors.white70, size: 20),
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-
-                                      // Main Title: "Row B, Seat 4"
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.accent, // #4ADE80
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
                                       Text(
-                                        'Row ${activeSeat.rowLabel}, Seat ${activeSeat.seatNumber}',
+                                        'View from ${activeSeat.id}',
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.3,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.1,
                                         ),
                                       ),
-                                      const SizedBox(height: 3),
-
-                                      // Subtitle: "Standard · €12.50" or "Recliner · €16.00"
-                                      Text(
-                                        '${activeSeat.type.name.capitalize()} · €${activeSeat.price.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: Color(0xFF8E929E),
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
+                                      const SizedBox(width: 4),
+                                      GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () => _goToAdjacentSeat(1),
+                                        child: const Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                          child: Icon(Icons.chevron_right_rounded, color: Colors.white70, size: 20),
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-
-                                // 126-Dot Miniature Seat Map Widget
-                                MiniatureSeatMap(activeSeat: activeSeat),
-                              ],
+                              ),
                             ),
-                            const SizedBox(height: 16),
 
-                            // Row 2: 3 Dynamic Metric Cards (to screen, field of view, lateral offset)
-                            Row(
-                              children: [
-                                _buildMetricCard(
-                                  value: '${metrics.distanceToScreen.toStringAsFixed(1)} m',
-                                  label: 'to screen',
+                            // Right: Fullscreen Toggle Button (enters landscape & cinema fullscreen)
+                            CircleAvatar(
+                              backgroundColor: AppColors.surface.withValues(alpha: 0.85),
+                              radius: 20,
+                              child: IconButton(
+                                tooltip: 'Full Screen Cinema',
+                                icon: const Icon(
+                                  Icons.fullscreen_rounded,
+                                  color: Colors.white,
+                                  size: 20,
                                 ),
-                                const SizedBox(width: 8),
-                                _buildMetricCard(
-                                  value: '${metrics.fieldOfView}°',
-                                  label: 'field of view',
-                                ),
-                                const SizedBox(width: 8),
-                                _buildMetricCard(
-                                  value: '${metrics.distanceFromCentre.toStringAsFixed(1)} m',
-                                  label: metrics.centreAlignmentLabel,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-
-                            // Row 3: Action Buttons (Change seat & Book)
-                            Row(
-                              children: [
-                                // Change Seat Button
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _handleBack,
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                      backgroundColor: AppColors.availableFill, // #1E1E24
-                                      side: const BorderSide(color: AppColors.availableBorder),
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: AppSpacing.roundedFull,
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Change seat',
-                                      style: TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-
-                                // Book Button
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      BookingConfirmationDialog.show(
-                                        context,
-                                        movie: widget.movie,
-                                        showtime: widget.showtime,
-                                        seat: activeSeat,
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.black,
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      elevation: 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: AppSpacing.roundedFull,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'Book · €${activeSeat.price.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 14.5,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                onPressed: _enterFullScreen,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
+
+                // 2B. Landscape Fullscreen Exit Button (Floating Top Right)
+                if (_isFullScreen)
+                  Positioned(
+                    top: 14,
+                    right: 16,
+                    child: SafeArea(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: _exitFullScreen,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.fullscreen_exit_rounded, color: AppColors.accent, size: 20),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Exit Fullscreen',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // 3. Draggable Information Sheet with smooth animated slide for fullscreen toggle
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeInOutCubic,
+                  left: 0,
+                  right: 0,
+                  bottom: _isFullScreen ? -MediaQuery.of(context).size.height * 0.75 : 0,
+                  height: MediaQuery.of(context).size.height,
+                  child: IgnorePointer(
+                    ignoring: _isFullScreen,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 260),
+                      opacity: _isFullScreen ? 0.0 : 1.0,
+                      child: DraggableScrollableSheet(
+                        controller: _sheetController,
+                        initialChildSize: 0.38,
+                        minChildSize: 0.12,
+                        maxChildSize: 0.62,
+                        snap: true,
+                        snapSizes: const [0.12, 0.38, 0.62],
+                        builder: (context, scrollController) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.checkoutSurface.withValues(alpha: 0.98), // #121215
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                              border: const Border(
+                                top: BorderSide(color: AppColors.surfaceBorder, width: 1.0),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, -6),
+                                ),
+                              ],
+                            ),
+                            child: SingleChildScrollView(
+                              controller: scrollController,
+                              physics: const ClampingScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Drag Handle Pill
+                                  Center(
+                                    child: Container(
+                                      width: 36,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF333744),
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // Row 1: Seat Info & 126-Dot Miniature Seat Map
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            // Zone Tag (UP CLOSE, SWEET SPOT, FULL PICTURE)
+                                            Text(
+                                              metrics.badgeLabel,
+                                              style: const TextStyle(
+                                                color: AppColors.accent, // #4ADE80
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 1.5,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+
+                                            // Main Title: "Row B, Seat 4"
+                                            Text(
+                                              'Row ${activeSeat.rowLabel}, Seat ${activeSeat.seatNumber}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 22,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: -0.3,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 3),
+
+                                            // Subtitle: "Standard · €12.50" or "Recliner · €16.00"
+                                            Text(
+                                              '${activeSeat.type.name.capitalize()} · €${activeSeat.price.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF8E929E),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // 126-Dot Interactive Miniature Seat Map Widget
+                                      MiniatureSeatMap(
+                                        activeSeat: activeSeat,
+                                        onSeatSelected: (seatId) => widget.seatController.toggleSeat(seatId),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Row 2: 3 Dynamic Metric Cards (to screen, field of view, lateral offset)
+                                  Row(
+                                    children: [
+                                      _buildMetricCard(
+                                        value: '${metrics.distanceToScreen.toStringAsFixed(1)} m',
+                                        label: 'to screen',
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildMetricCard(
+                                        value: '${metrics.fieldOfView}°',
+                                        label: 'field of view',
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _buildMetricCard(
+                                        value: '${metrics.distanceFromCentre.toStringAsFixed(1)} m',
+                                        label: metrics.centreAlignmentLabel,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+
+                                  // Quick Row Jump Selector (Directly test front, middle, and back rows)
+                                  SizedBox(
+                                    height: 30,
+                                    child: ListView.separated(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: MockAuditoriums.rowLabels.length,
+                                      separatorBuilder: (_, __) => const SizedBox(width: 6),
+                                      itemBuilder: (context, rIndex) {
+                                        final rLabel = MockAuditoriums.rowLabels[rIndex];
+                                        final isCurrentRow = activeSeat.rowLabel == rLabel;
+                                        return GestureDetector(
+                                          behavior: HitTestBehavior.opaque,
+                                          onTap: () {
+                                            widget.seatController.toggleSeat('${rLabel}8');
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 160),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                            decoration: BoxDecoration(
+                                              color: isCurrentRow ? AppColors.accent : AppColors.surface,
+                                              borderRadius: BorderRadius.circular(15),
+                                              border: Border.all(
+                                                color: isCurrentRow ? AppColors.accent : AppColors.surfaceBorder,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'Row $rLabel',
+                                              style: TextStyle(
+                                                color: isCurrentRow ? AppColors.accentText : AppColors.textSecondary,
+                                                fontSize: 11,
+                                                fontWeight: isCurrentRow ? FontWeight.w800 : FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Row 3: Action Buttons (Change seat & Book)
+                                  Row(
+                                    children: [
+                                      // Change Seat Button
+                                      Expanded(
+                                        child: OutlinedButton(
+                                          onPressed: _handleBack,
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.white,
+                                            backgroundColor: AppColors.availableFill, // #1E1E24
+                                            side: const BorderSide(color: AppColors.availableBorder),
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: AppSpacing.roundedFull,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Change seat',
+                                            style: TextStyle(
+                                              fontSize: 14.5,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+
+                                      // Book Button
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            BookingConfirmationDialog.show(
+                                              context,
+                                              movie: widget.movie,
+                                              showtime: widget.showtime,
+                                              seat: activeSeat,
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor: Colors.black,
+                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                            elevation: 0,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: AppSpacing.roundedFull,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Book · €${activeSeat.price.toStringAsFixed(2)}',
+                                            style: const TextStyle(
+                                              fontSize: 14.5,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
