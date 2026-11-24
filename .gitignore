@@ -51,3 +51,5 @@ lib/core/config/tmdb_credentials.dart
 
 # Widget Preview related
 .widget_preview/
+
+dart_defines.json
